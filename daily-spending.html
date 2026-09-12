@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>日常消費月度總覽</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#f4f2ec; --surface:#fbfaf7; --surface-2:#f0eee6;
+    --ink:#1c1b17; --ink-2:#57544c; --muted:#8a867a;
+    --hair:#e4e1d6; --hair-strong:#d3cfc1;
+    --accent:#0a8f7c; --accent-soft:#e0f0ec;
+    --c-recur:#0a8f7c; --c-oneoff:#e0692f;
+    --shadow:0 1px 2px rgba(28,27,23,.05), 0 8px 24px -12px rgba(28,27,23,.12);
+    --serif:"Fraunces", ui-serif, Georgia, "Songti TC", serif;
+    --sans:"IBM Plex Sans", "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+    --mono:"IBM Plex Mono", "PingFang TC", "Microsoft JhengHei", ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#121310; --surface:#1b1c18; --surface-2:#232420;
+      --ink:#f3f1e8; --ink-2:#b8b4a6; --muted:#86837a;
+      --hair:#2c2d27; --hair-strong:#3a3b33;
+      --accent:#26b39c; --accent-soft:#123029;
+      --c-recur:#1fa48f; --c-oneoff:#dd6636;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#121310; --surface:#1b1c18; --surface-2:#232420;
+    --ink:#f3f1e8; --ink-2:#b8b4a6; --muted:#86837a;
+    --hair:#2c2d27; --hair-strong:#3a3b33;
+    --accent:#26b39c; --accent-soft:#123029;
+    --c-recur:#1fa48f; --c-oneoff:#dd6636;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--bg); color:var(--ink); font-family:var(--sans);
+    line-height:1.55; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px; margin:0 auto; padding:clamp(20px,5vw,56px) clamp(16px,4vw,32px) 72px;}
+
+  header.top{display:flex; flex-wrap:wrap; gap:24px 40px; align-items:flex-end;
+    justify-content:space-between; padding-bottom:28px; border-bottom:1px solid var(--hair-strong);}
+  .eyebrow{font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); font-weight:600; margin:0 0 10px;}
+  h1{font-family:var(--serif); font-weight:500; font-size:clamp(26px,4vw,36px);
+    line-height:1.15; margin:0 0 8px; letter-spacing:-.01em; text-wrap:balance;}
+  .sub{margin:0; color:var(--ink-2); font-size:14.5px; max-width:48ch;}
+  .headline{text-align:right; flex-shrink:0;}
+  .headline .fig{font-family:var(--serif); font-weight:500; font-size:clamp(34px,6vw,52px);
+    line-height:1; color:var(--accent); letter-spacing:-.02em;}
+  .headline .fig .cur{font-size:.42em; color:var(--ink-2); font-weight:500; margin-right:.15em; letter-spacing:0;}
+  .headline .cap{margin-top:8px; font-size:13px; color:var(--muted);}
+  .headline .cap b{color:var(--ink-2); font-weight:600; font-variant-numeric:tabular-nums;}
+
+  .theme-btn{position:fixed; top:14px; right:14px; z-index:20; border:1px solid var(--hair-strong);
+    background:var(--surface); color:var(--ink-2); border-radius:999px; padding:6px 12px;
+    font-family:var(--sans); font-size:12px; cursor:pointer; box-shadow:var(--shadow);}
+  .theme-btn:hover{color:var(--ink)}
+
+  section{margin-top:44px;}
+  .sec-head{display:flex; align-items:baseline; gap:12px; margin-bottom:16px; flex-wrap:wrap;}
+  h2{font-family:var(--serif); font-weight:500; font-size:20px; margin:0; letter-spacing:-.01em;}
+  .sec-head .note{font-size:12.5px; color:var(--muted);}
+
+  .card{background:var(--surface); border:1px solid var(--hair); border-radius:14px;
+    padding:22px; box-shadow:var(--shadow);}
+
+  /* ---------- monthly review ---------- */
+  .rv-months{display:grid; grid-template-columns:repeat(8,1fr); gap:6px;}
+  .rv-m{border:1px solid var(--hair); background:var(--surface); color:var(--ink-2); border-radius:8px;
+    padding:8px 0 6px; font-size:12px; cursor:pointer; font-family:var(--sans); text-align:center;
+    font-variant-numeric:tabular-nums; transition:border-color .12s, background .12s, color .12s;}
+  .rv-m:hover{border-color:var(--hair-strong);}
+  .rv-m[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600;}
+  .rv-m .amt{display:block; font-size:9.5px; color:var(--muted); margin-top:2px; font-family:var(--mono);}
+  .rv-m[aria-pressed="true"] .amt{color:rgba(255,255,255,.82);}
+  .rv-m.flag{position:relative;}
+  .rv-m.flag::after{content:"●"; color:var(--c-oneoff); font-size:6px; position:absolute; top:4px; right:6px;}
+  .rv-m.flag[aria-pressed="true"]::after{color:#fff;}
+  .rv-head{display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 16px; margin:18px 0 2px;}
+  .rv-total{font-family:var(--serif); font-size:19px; color:var(--ink);}
+  .rv-total b{color:var(--accent); font-weight:600;}
+  .rv-dev{font-family:var(--mono); font-size:12.5px; font-weight:600; color:var(--muted);}
+  .rv-dev.up{color:var(--c-oneoff);}
+  .rv-story{font-size:12.5px; color:var(--ink-2); background:var(--accent-soft); border-radius:8px;
+    padding:9px 12px; margin:12px 0 2px; line-height:1.55;}
+  .rv-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px 30px; margin-top:16px;}
+  .rv-col h4{margin:0 0 6px; font-size:12px; font-weight:600; color:var(--ink-2);}
+  .rv-row{display:flex; align-items:center; gap:10px; padding:6px 0; font-size:12.5px; border-bottom:1px solid var(--hair);}
+  .rv-row:last-child{border-bottom:none;}
+  .rv-row .nm{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink-2);}
+  .rv-row .bt{width:64px; height:7px; border-radius:3px; background:var(--surface-2); overflow:hidden; flex:none;}
+  .rv-row .bt i{display:block; height:100%; background:var(--accent); border-radius:3px;}
+  .rv-row .amt{font-family:var(--mono); font-variant-numeric:tabular-nums; color:var(--ink);
+    white-space:nowrap; width:74px; text-align:right; flex:none;}
+
+  /* ---------- trend chart ---------- */
+  .legend{display:flex; gap:18px; margin-bottom:4px; font-size:12.5px; color:var(--ink-2); flex-wrap:wrap;}
+  .legend span{display:flex; align-items:center; gap:7px;}
+  .legend i{width:10px; height:10px; border-radius:3px;}
+  .legend .ln{width:14px; height:0; border-top:2px dashed var(--muted); display:inline-block;}
+  .trend{position:relative; margin-top:16px; height:236px;}
+  .trend-grid{position:absolute; inset:0 0 26px 0; display:flex; flex-direction:column; justify-content:space-between;}
+  .trend-grid div{border-top:1px solid var(--hair); position:relative;}
+  .trend-grid div span{position:absolute; left:0; top:-8px; font-size:10.5px; color:var(--muted);
+    font-variant-numeric:tabular-nums; background:var(--surface); padding-right:6px;}
+  .avg-line{position:absolute; left:38px; right:0; border-top:2px dashed var(--muted); z-index:2;}
+  .avg-line span{position:absolute; right:0; top:-16px; font-size:10px; color:var(--muted); font-family:var(--mono);}
+  .tbars{position:absolute; inset:0 0 26px 38px; display:grid; grid-template-columns:repeat(8,1fr);
+    gap:clamp(8px,2vw,20px); align-items:end;}
+  .tbar-col{display:flex; flex-direction:column; justify-content:flex-end; height:100%; cursor:pointer; position:relative;}
+  .tbar{width:100%; border-radius:5px 5px 0 0; background:var(--accent); transition:filter .12s;}
+  .tbar-col:hover .tbar{filter:brightness(1.08)}
+  .tbar-col.high .tbar{background:var(--c-oneoff);}
+  .tbar-col .flag{position:absolute; top:-18px; left:50%; transform:translateX(-50%); font-size:10px;
+    font-family:var(--mono); white-space:nowrap; color:var(--c-oneoff); font-weight:600; opacity:0; transition:opacity .12s;}
+  .tbar-col:hover .flag, .tbar-col.high .flag{opacity:1;}
+  .tbar-col .mlab{position:absolute; top:calc(100% + 8px); left:0; right:0; text-align:center;
+    font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;}
+
+  .tip{position:fixed; z-index:30; background:var(--ink); color:var(--bg); border-radius:9px;
+    padding:10px 12px; font-size:12px; max-width:260px; pointer-events:none; opacity:0;
+    transition:opacity .1s; box-shadow:0 8px 24px -8px rgba(0,0,0,.4); line-height:1.5;}
+  .tip b{font-family:var(--mono); font-weight:500;}
+  .tip .h{font-weight:600; margin-bottom:4px;}
+  .tip .row{display:flex; justify-content:space-between; gap:14px;}
+  .tip .muted{color:var(--muted);}
+
+  /* ---------- anomaly callouts ---------- */
+  .anomaly-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(216px,1fr)); gap:12px; margin-top:12px;}
+  .am-card{border:1px solid var(--hair); border-radius:10px; padding:13px 15px; background:var(--surface-2);}
+  .am-card.up{border-left:3px solid var(--c-oneoff);}
+  .am-card.down{border-left:3px solid var(--hair-strong);}
+  .am-head{display:flex; align-items:baseline; gap:8px; margin-bottom:5px;}
+  .am-head .m{font-family:var(--serif); font-size:15px; color:var(--ink); font-weight:500;}
+  .am-head .dev{font-family:var(--mono); font-size:12px; font-weight:600; color:var(--muted);}
+  .am-card.up .am-head .dev{color:var(--c-oneoff);}
+  .am-line{font-size:12px; color:var(--ink-2); margin-bottom:10px; line-height:1.5;}
+  .am-row{display:flex; justify-content:space-between; gap:8px; font-size:11.5px; padding:3px 0; color:var(--ink-2);}
+  .am-row b{font-family:var(--mono); font-variant-numeric:tabular-nums; font-weight:500;}
+  .am-row b.pos{color:var(--c-oneoff);}
+  .am-row b.neg{color:var(--muted);}
+
+  /* ---------- heatmap ---------- */
+  .heat-scroll{overflow-x:auto;}
+  .heat{display:grid; grid-template-columns:132px repeat(8,64px) 84px; min-width:820px; gap:3px;}
+  .heat .hh{font-size:11px; color:var(--muted); text-align:center; padding:4px 0 8px; font-variant-numeric:tabular-nums;}
+  .heat .hh.name{text-align:left;}
+  .heat .rname{display:flex; align-items:center; font-size:12.5px; color:var(--ink); font-weight:500;
+    padding:2px 8px 2px 0; cursor:pointer; border-radius:6px;}
+  .heat .rname:hover{background:var(--surface-2);}
+  .heat .rname.active{color:var(--accent);}
+  .heat-cell{position:relative; border-radius:6px; min-height:34px; display:flex; align-items:center;
+    justify-content:center; overflow:hidden; background:var(--surface-2);}
+  .heat-cell::before{content:"";position:absolute;inset:0;background:var(--accent);opacity:var(--i,0);}
+  .heat-cell .v{position:relative; z-index:1; font-family:var(--mono); font-size:10px;
+    font-variant-numeric:tabular-nums; color:var(--ink-2);}
+  .heat-cell.hi .v{color:#fff;}
+  .heat-cell.zero .v{color:var(--muted); opacity:.5;}
+  .heat .rtotal{display:flex; flex-direction:column; align-items:flex-end; justify-content:center;
+    font-family:var(--mono); font-size:11.5px; color:var(--ink); padding-right:2px;}
+  .heat .rtotal .pct{font-size:10px; color:var(--muted); font-family:var(--sans);}
+  .heat-note{font-size:11.5px; color:var(--muted); margin-top:12px;}
+
+  /* ---------- ranked category list + drilldown ---------- */
+  .rk-list{display:flex; flex-direction:column;}
+  .rk-row{display:grid; grid-template-columns:150px 1fr auto auto; gap:12px; align-items:center;
+    padding:9px 6px; border-radius:8px; cursor:pointer; border:1px solid transparent;}
+  .rk-row:hover{background:var(--surface-2);}
+  .rk-row.active{background:var(--accent-soft); border-color:var(--accent);}
+  .rk-row .nm{font-size:13px; color:var(--ink); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .rk-row .bt{height:9px; border-radius:3px; background:var(--surface-2); overflow:hidden;}
+  .rk-row.active .bt{background:rgba(255,255,255,.35)}
+  .rk-row .bt i{display:block; height:100%; background:var(--accent); border-radius:3px;}
+  .rk-row .vv{font-family:var(--mono); font-size:12px; color:var(--ink-2); text-align:right; white-space:nowrap;}
+  .badge{font-size:10.5px; padding:2px 9px; border-radius:999px; border:1px solid var(--hair-strong);
+    color:var(--ink-2); white-space:nowrap; font-weight:600;}
+  .badge.steady{background:var(--accent-soft); border-color:transparent; color:var(--accent);}
+  .badge.lumpy{background:color-mix(in srgb, var(--c-oneoff) 15%, transparent); border-color:transparent; color:var(--c-oneoff);}
+
+  .drill{margin-top:18px; padding-top:18px; border-top:1px solid var(--hair-strong);}
+  .drill-head{display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 16px; margin-bottom:14px;}
+  .drill-head h3{font-family:var(--serif); font-size:18px; margin:0; font-weight:500;}
+  .drill-head .stat{font-size:12.5px; color:var(--muted);}
+  .drill-note{font-size:12px; color:var(--ink-2); background:var(--accent-soft); border-radius:8px;
+    padding:9px 12px; margin:0 0 16px; line-height:1.55;}
+  .drill-grid{display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:22px;}
+  .drill-mini{display:grid; grid-template-columns:repeat(8,1fr); gap:6px; align-items:end; height:110px;}
+  .drill-mini .dcol{display:flex; flex-direction:column; justify-content:flex-end; height:100%; position:relative;}
+  .drill-mini .dbar{width:100%; background:var(--accent); border-radius:3px 3px 0 0; min-height:2px;}
+  .drill-mini .dcol .dlab{position:absolute; top:calc(100% + 5px); left:0; right:0; text-align:center;
+    font-size:9.5px; color:var(--muted);}
+  .drill-list h4{margin:0 0 8px; font-size:12px; font-weight:600; color:var(--ink-2);}
+  .drill-list .row{display:flex; justify-content:space-between; gap:10px; padding:5px 0; font-size:12px;
+    border-bottom:1px solid var(--hair); color:var(--ink-2);}
+  .drill-list .row:last-child{border-bottom:none;}
+  .drill-list .row .amt{font-family:var(--mono); color:var(--ink); white-space:nowrap;}
+  .drill-list .row .nm{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+
+  footer{margin-top:44px; padding-top:18px; border-top:1px solid var(--hair);
+    font-size:11.5px; color:var(--muted); line-height:1.7;}
+  footer code{font-family:var(--mono); color:var(--ink-2);}
+
+  @media (max-width:760px){
+    header.top{flex-direction:column; align-items:flex-start;}
+    .headline{text-align:left;}
+    .heat{grid-template-columns:110px repeat(8,52px) 70px;}
+    .rk-row{grid-template-columns:1fr auto; grid-template-areas:"nm badge" "bar bar" "vv vv";}
+    .rk-row .nm{grid-area:nm;} .rk-row .bt{grid-area:bar;} .badge{grid-area:badge;} .rk-row .vv{grid-area:vv; text-align:left;}
+    .drill-grid{grid-template-columns:1fr; gap:20px;}
+    .rv-months{grid-template-columns:repeat(4,1fr);}
+    .rv-grid{grid-template-columns:1fr;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+</style>
+<style>.pwa-back{position:fixed;top:14px;left:14px;z-index:20;border:1px solid var(--hair-strong,#d3cfc1);
+  background:var(--surface,#fbfaf7);color:var(--ink-2,#57544c);border-radius:999px;padding:6px 13px;
+  font-family:var(--sans,sans-serif);font-size:12px;text-decoration:none;box-shadow:var(--shadow,0 1px 2px rgba(0,0,0,.1));}
+.pwa-back:hover{color:var(--ink,#1c1b17);}</style>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#f4f2ec">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="資產App">
+
+</head>
+<body>
+<a href="./index.html" class="pwa-back">← 返回首頁</a>
+
+
+<button class="theme-btn" id="themeBtn" type="button">◑ 主題</button>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">資產 App · 消費地圖分頁</p>
+      <h1>日常消費月度總覽</h1>
+      <p class="sub">排除購屋／貸款與投資配置，只看真正花掉的日常消費：每個月花在哪裡、佔比多少，以及哪個月不太正常。</p>
+    </div>
+    <div class="headline">
+      <div class="fig"><span class="cur">NT$</span><span id="figTotal">—</span></div>
+      <div class="cap"><b id="figRange">—</b> 合計 · 月均 <b id="figAvg">—</b></div>
+    </div>
+  </header>
+
+  <section id="review">
+    <div class="sec-head"><h2>每月消費復盤</h2><span class="note">選一個月，看那個月的錢花在哪裡、跟平常有什麼不同（有備註的月份標了 ● ）</span></div>
+    <div class="card">
+      <div class="rv-months" id="rvMonths"></div>
+      <div class="rv-head">
+        <div class="rv-total"><span id="rvMonthLbl">—</span> 花了 <b id="rvTotal">—</b></div>
+        <div class="rv-dev" id="rvDev">—</div>
+      </div>
+      <p class="rv-story" id="rvStory" hidden></p>
+      <div class="rv-grid">
+        <div class="rv-col"><h4>這個月花在哪裡</h4><div id="rvCats"></div></div>
+        <div class="rv-col"><h4>店家 / 描述 Top</h4><div id="rvMerchants"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="trend">
+    <div class="sec-head"><h2>月度總支出</h2><span class="note">虛線為 8 個月均值，橘色柱代表偏離均值超過 20%</span></div>
+    <div class="card">
+      <div class="legend">
+        <span><i style="background:var(--accent)"></i>正常範圍內</span>
+        <span><i style="background:var(--c-oneoff)"></i>偏離均值 ±20% 以上</span>
+        <span><span class="ln"></span>月均</span>
+      </div>
+      <div class="trend">
+        <div class="trend-grid" id="trendGrid"></div>
+        <div class="avg-line" id="avgLine"><span id="avgLineLabel"></span></div>
+        <div class="tbars" id="tbars"></div>
+      </div>
+      <p class="heat-note" id="anomalyLead">偏離月均的月份，主要原因如下：</p>
+      <div class="anomaly-grid" id="anomalyGrid"></div>
+    </div>
+  </section>
+
+  <section id="heatmap">
+    <div class="sec-head"><h2>分類 × 月份熱力圖</h2><span class="note">顏色深淺為該分類自己的月度相對高低；點分類名可到下方看明細</span></div>
+    <div class="card">
+      <div class="heat-scroll">
+        <div class="heat" id="heat"></div>
+      </div>
+      <p class="heat-note">熱力圖依「分類自身」正規化——同一列顏色愈深，代表那個月在這個分類裡花得比平常多，不代表跨分類金額大小（金額大小請看右側合計欄與數字）。</p>
+    </div>
+  </section>
+
+  <section id="ranked">
+    <div class="sec-head"><h2>怎麼分・是否正常</h2><span class="note">依 8 個月變動係數判斷：穩定＝每月差不多，不定期＝時有時無、偶爾一次大額</span></div>
+    <div class="card">
+      <div class="rk-list" id="rkList"></div>
+      <div class="drill" id="drill"></div>
+    </div>
+  </section>
+
+  <footer>
+    資料來源：Google 試算表「消費地圖」＋「消費明細」分頁，範圍 2026/01–08（尚未涵蓋 9 月至今）。<br>
+    口徑：類型＝支出、納入支出統計＝是，並排除「貸款／置產」與資產配置調度；金額為 TWD。分類依消費地圖既有語意聚合，「會員／年費訂閱」併入「訂閱／數位服務」以利對照。<br>
+    「穩定 / 不定期」為 8 個月變動係數（標準差 ÷ 平均）的粗略分級，非會計判斷，僅供快速掃描異常月份使用。
+  </footer>
+</div>
+
+<div class="tip" id="tip"></div>
+
+<script>const DATA = {"months":["2026/01","2026/02","2026/03","2026/04","2026/05","2026/06","2026/07","2026/08"],"categories":[{"name":"居家／修繕","monthly":[50686,27562,67237,116618,41396,9290,91904,37836],"total":442530,"share":0.2390224497,"mean":55316,"cv":0.59,"max":116618,"maxMonth":"2026/04","merchants":[["房租｜現住處（房東 Sheena Melissa）",161812],["房租｜前住處（房東 Tiong Yeo Chuan）",76994],["小米家電／用品",38265],["Shopee MY Marketplace Kuala Lumpur MY",33911],["DUITNOW TO ACCOUNT｜KNIGHT WORLD REALTY (",28738],["網銀轉帳",22800],["ALTERSEAT",15517],["Shopee MY Marketplace KualaLumpur MY",11565]],"subcats":[["租金／押金／仲介費",267545],["3C／家電",109045],["住宅風水／紫微諮詢",22800],["水電／燃料費",18438],["電信／網路費",13791],["食品／雜貨",5264],["居家用品／軟裝",5264],["修繕／維修",384]],"note":"3 月中搬離前住處（房東 Tiong Yeo Chuan，月租 RM3,200）；4 月起入住現址（房東 Sheena Melissa）。房租、搬家與新家電支出都算在這個分類裡。"},{"name":"旅遊","monthly":[86690,171941,38779,0,0,75643,0,0],"total":373053,"share":0.2014960428,"mean":46632,"cv":1.24,"max":171941,"maxMonth":"2026/02","merchants":[["TRIP.COM",216619],["Trip.com",60489],["電子轉出",30000],["手機轉帳",20000],["Trip com",12680],["ＫＫｄａｙ",9367],["LET'S RELAX PHUKET (2N",5471],["Shopee MY Marketplace Kuala Lumpu",4170]],"subcats":[["旅遊交通／機票",217307],["旅遊／套裝行程",82034],["訂金／團費",50000],["按摩／SPA",5471],["旅遊／行李箱",4170],["旅遊／香水",4152],["餐廳／小吃",3080],["食品／雜貨",3001]]},{"name":"日常生活","monthly":[27521,3421,18861,32473,77533,36885,33489,33436],"total":263619,"share":0.1423876978,"mean":32952,"cv":0.6,"max":77533,"maxMonth":"2026/05","merchants":[["AEON BIG-JAYA ONE",86895],["AM & PM Hair Studio an",19005],["ANGIE EARSPA-PJ",17362],["BETA-FRASER PLACE",16562],["GUARDIAN-JAY1-8675",12470],["POTAGER",9121],["Payment｜CHAGEE (M) SDN BHD",8927],["BERLANCO - T2",6474]],"subcats":[["食品／雜貨",100676],["餐廳／小吃",81150],["美容／美髮",48616],["咖啡／飲品",18950],["藥妝／保養品",14227]]},{"name":"家庭／親屬往來","monthly":[25500,25500,25500,25500,25500,25500,0,0],"total":153000,"share":0.08263944947,"mean":19125,"cv":0.58,"max":25500,"maxMonth":"2026/01","merchants":[["網銀預約",153000]],"subcats":[["父親車貸",153000]]},{"name":"保險／保費","monthly":[23475,0,0,6649,75379,0,7160,30827],"total":143490,"share":0.07750279291,"mean":17936,"cv":1.35,"max":75379,"maxMonth":"2026/05","merchants":[["台灣人壽１０１２０５９",68004],["AIA IPOS ONLINE KUALA MY",21231],["2026/08/06 09:42｜電子轉出｜(009)0051850116889",9266],["遠雄續期保費９９６９５",8813],["台灣人壽７１１１９１９",7160],["富邦人壽Ａ２＊＊７６３０１１１５０８",6894],["台灣人壽Ａ３６００２８",6649],["2026/08/06 09:43｜電子轉出｜(009)0051850116889",5854]],"subcats":[["保費",141535],["房貸壽險／房貸火險",1947],["數位錢包保障",8]]},{"name":"寵物","monthly":[2482,0,15073,38914,48562,7585,8407,10437],"total":131461,"share":0.07100552407,"mean":16433,"cv":1.01,"max":48562,"maxMonth":"2026/05","merchants":[["HOSPITAL VETERINAR - T",28125],["DUITNOW｜DuitNow QR｜DUITNOW||230382450|Du",16082],["PETICO.MY-THE SCHOOL",15965],["Transfer to Wallet｜CHIN YI WAI",11885],["STARLIGHT",8642],["Transfer to Wallet",7983],["Shopee MY Marketplace Kuala Lumpur MY",7496],["IHERB IHERB.COM iherb.com NL",7269]],"subcats":[["疫苗／醫療",51432],["食品／用品",42200],["購買寵物訂金(啾咪)",21412],["購買寵物尾款(啾咪)",16082],["洗澡／寄宿",334]]},{"name":"醫療／保健","monthly":[6234,0,11952,19358,38735,7133,8046,34093],"total":125551,"share":0.06781350013,"mean":15694,"cv":0.83,"max":38735,"maxMonth":"2026/05","merchants":[["THOMSON HOSPITAL KOTA",32375],["2026/08/30 17:14｜手機轉帳｜812002035010001133",30000],["IHERB IHERB.COM iherb.com NL",23272],["INTROSPECT HEALTH SDN",19558],["BEST OSTEO SDN BHD",6380],["INTROSPECT HEALTH SDN BHD",3678],["WHITE DENSITY",3315],["NTT*THITIMA MASSAGE KA",2556]],"subcats":[["用藥／醫療",78397],["保健品／醫療用品",47034],["會籍費／卡費",120]]},{"name":"捐款","monthly":[1000,12000,9888,19851,15992,7248,7282,7611],"total":80872,"share":0.04368116534,"mean":10109,"cv":0.54,"max":19851,"maxMonth":"2026/04","merchants":[["網銀轉帳",11000],["WWW.MYFUNNOW.COM WILAYAH PERSEMY",7222],["藍新－台灣之心愛護動物協會",6000],["POS DEBIT｜20260427MYKASIH FOUNDATION    ",5329],["Payment｜SECOND CHANCE ANIMAL",5274],["藍新－社團法人台灣一起夢想公",4000],["藍新－社團法人台灣懷生相信動",4000],["綠界－糧舍商號",3500]],"subcats":[["台灣定期捐款",32000],["馬來單次捐款",21018],["馬來定期捐款",16854],["台灣單次捐款",11000]]},{"name":"訂閱／數位服務","monthly":[8003,3565,5921,10490,3953,5679,4147,3403],"total":45162,"share":0.02439339366,"mean":5645,"cv":0.41,"max":10490,"maxMonth":"2026/04","merchants":[["P.SKOOL.COM/TXQJT WWW.SKOOL.COMUS",22013],["CLAUDE.AI SUBSCRIPTION ANTHROPIC.COMUS",6288],["A- APPLE.COM/BILL 0800095988 IE",4500],["GOOGLE*GOOGLE ONE SUPPORT.GOOGLUS",3250],["P.SKOOL.COM/TXQJT WWW.SKOOL.COM",3113],["A- PADDLE.NET* EWA LONDON GB",2457],["A- APPLE.COM/BILL ITUNES.COM IE",2370],["Payment｜Maxis",710]],"subcats":[["十倍財富(月繳)",25126],["CLAUDE(年繳)",6288],["ChatGPT",5520],["Google One(年繳)",3250],["數位訂閱",1632],["EWA英語學習",1226],["Kraken+ Monthly(月繳)",1200],["電信／網路費",710]]},{"name":"休閒／娛樂","monthly":[19464,0,2000,0,5390,0,1594,1327],"total":29774,"share":0.01608156133,"mean":3722,"cv":1.66,"max":19464,"maxMonth":"2026/01","merchants":[["GAME ON",18733],["Payment｜Golden Screen Cinemas Sdn Bhd",3336],["Payment｜PAYMENTWALL LTD",2223],["KOBO SOFTWARE IRELAND DUBLIN 2 IE",2000],["I-PAYMENT｜FPXPAY SHOPEE MALAYSIA｜I-PAYME",1424],["2026/08/26｜DuitNow QR TNGD｜BUDG Gaming｜D",1327],["A- SAMMI FAN CLUB -MEMBEKWAI CHUNG HK",731]],"subcats":[["遊戲主機／配件",18733],["遊戲／點卡",4974],["電影／表演",3336],["電子書充值",2000],["會籍費／卡費",731]]},{"name":"交通","monthly":[6712,6585,3146,3857,3790,1465,1081,1224],"total":27860,"share":0.01504794158,"mean":3482,"cv":0.6,"max":6712,"maxMonth":"2026/01","merchants":[["WWW.GRAB.COM",10136],["GRAB RIDES-EC",7834],["PYX*Bolt Services MY S SELANGOR MY",3275],["GRAB-EC",1748],["WWW.2C2P.COM*2C2P BOLT (MBANGKOK TH",1317],["PYX*Bolt Services MY S MYR SELANGOR MY",584],["WWW.2C2P.COM*2C2P (THAILA",388],["Grab* v4-4a3e8bba529a42b7",380]],"subcats":[["計程車費",15635],["旅遊交通／計程車費",12225]]},{"name":"金融／稅務","monthly":[3302,4276,1354,1916,3215,1844,1264,803],"total":17974,"share":0.009708134617,"mean":2247,"cv":0.5,"max":4276,"maxMonth":"2026/02","merchants":[["國外交易手續費 -TRIP.C",3250],["國外退貨手續費 -TRIP.C",1310],["國外交易手續費 -AEONB",1262],["Shopee MY Marketplace 國外交易服務費",977],["國外交易手續費 -Trip.c",908],["小米家電／用品",557],["國外交易手續費 -THOMSO",486],["國外交易手續費 -HOSPIT",422]],"subcats":[["國外交易手續費",16296],["外匯郵電費",1248],["金融／信用查詢費",160],["手續費／費用",119],["股息預扣稅",106],["退款／消費回沖",45],["信用卡年費",0]]},{"name":"購物／服飾","monthly":[1204,0,143,4280,748,284,7740,2671],"total":17071,"share":0.009220346645,"mean":2134,"cv":1.18,"max":7740,"maxMonth":"2026/07","merchants":[["Uniqlo Mid Valley",4130],["UNIQLO TRX",3760],["STORMINGGRAVITYSDNBHD KL MY",2693],["手動記帳｜購買水晶",2594],["UNIQLO-JUNGCEYLON PHUK",1197],["STORMING GRAVITY-ECO S",1084],["Payment｜PINDUODUO",669],["DuitNow QR｜BOXPLUS DIGITAL",203]],"subcats":[["服飾／鞋帽",10367],["包包／配件",2693],["收藏／嗜好",2594],["物流／包裹服務費",748],["食品／雜貨",669]]}],"monthlyTotal":[262274,254850,199854,279906,340193,178557,172114,163668],"grandTotal":1851416,"avgMonthly":231427,"monthly":[{"month":"2026/01","total":262274,"topCats":[["旅遊",86690],["居家／修繕",50686],["日常生活",27521],["家庭／親屬往來",25500],["保險／保費",23475],["休閒／娛樂",19464]],"topMerchants":[["TRIP.COM",36410],["房租｜前住處（房東 Tiong Yeo Chuan）",25648],["網銀預約",25500],["Trip.com",23082],["網銀轉帳",22800],["AIA IPOS ONLINE KUALA MY",21231],["GAME ON",18733],["Trip com",12680]],"story":"月底到泰國普吉島旅遊，購買套裝行程。"},{"month":"2026/02","total":254850,"topCats":[["旅遊",171941],["居家／修繕",27562],["家庭／親屬往來",25500],["捐款",12000],["交通",6585],["金融／稅務",4276]],"topMerchants":[["TRIP.COM",161664],["房租｜前住處（房東 Tiong Yeo Chuan）",25801],["網銀預約",25500],["網銀轉帳",11000],["LET'S RELAX PHUKET (2N",5471],["WWW.GRAB.COM",5440],["ESPERA CAFE RESTAURANT",3421],["P.SKOOL.COM/TXQJT WWW.SKOOL.COMUS",3115]],"story":"整個月都待在清邁；當地生活消費約 NT$13,427，其餘旅費（機票、住宿等）是這個月旅遊支出偏高的主因。"},{"month":"2026/03","total":199854,"topCats":[["居家／修繕",67237],["旅遊",38779],["家庭／親屬往來",25500],["日常生活",18861],["寵物",15073],["醫療／保健",11952]],"topMerchants":[["電子轉出",30000],["DUITNOW TO ACCOUNT｜KNIGHT WORLD REALTY (M)",28738],["房租｜前住處（房東 Tiong Yeo Chuan）",25545],["網銀預約",25500],["Shopee MY Marketplace Kuala Lumpur MY",14967],["Transfer to Wallet",7983],["AEON BIG-JAYA ONE",6711],["IHERB IHERB.COM iherb.com NL",6340]],"story":"購買三星手機（工作用）、行李箱、BOSS 香水；訂了澳洲來回機票 NT$73,939（接媽媽來馬來西亞）與澳洲簽證 NT$457；付了埃及行程訂金 NT$30,000；清邁當地消費延續約 NT$4,347。"},{"month":"2026/04","total":279906,"topCats":[["居家／修繕",116618],["寵物",38914],["日常生活",32473],["家庭／親屬往來",25500],["捐款",19851],["醫療／保健",19358]],"topMerchants":[["房租｜現住處（房東 Sheena Melissa）",63609],["網銀預約",25500],["Shopee MY Marketplace Kuala Lumpur MY",20811],["DUITNOW｜DuitNow QR｜DUITNOW||230382450|Duit",16082],["ALTERSEAT",15517],["AEON BIG-JAYA ONE",15427],["Transfer to Wallet｜CHIN YI WAI",11885],["WWW.MYFUNNOW.COM WILAYAH PERSEMY",7222]],"story":"搬到新租屋處：添購居家用品與家具，也帶回一隻美短貓咪、買了不少寵物用品；這個月也訂閱 SHENG BU 社群（US$99）、續訂 ChatGPT Plus／Kraken+／Claude Pro，買了 KOBO 電子書（NT$2,000），看了身心科，也訂了媽媽從澳洲飛吉隆坡的機票。"},{"month":"2026/05","total":340193,"topCats":[["日常生活",77533],["保險／保費",75379],["寵物",48562],["居家／修繕",41396],["醫療／保健",38735],["家庭／親屬往來",25500]],"topMerchants":[["台灣人壽１０１２０５９",68004],["THOMSON HOSPITAL KOTA",32375],["小米家電／用品",30652],["HOSPITAL VETERINAR - T",28125],["網銀預約",25500],["BETA-FRASER PLACE",16562],["AEON BIG-JAYA ONE",13693],["Shopee MY Marketplace Kuala Lumpur MY",9273]],"story":"柴犬花生做絕育手術、住院 11 天；母親節請媽媽吃大餐、做臉理髮，還買了摩卡壺送她；也添購小米螢幕、POCO 手機、空氣清淨機、監視器、電動牙刷等 3C 用品，都是新家要用的。"},{"month":"2026/06","total":178557,"topCats":[["旅遊",75643],["日常生活",36885],["家庭／親屬往來",25500],["居家／修繕",9290],["寵物",7585],["捐款",7248]],"topMerchants":[["Trip.com",37098],["網銀預約",25500],["手機轉帳",20000],["TRIP.COM",18545],["AEON BIG-JAYA ONE",16183],["GUARDIAN-JAY1-8675",5214],["MIZU OMAKASE",4971],["PETICO.MY-THE SCHOOL",4296]],"story":"訂了 11 月 15 日跟媽媽回台灣的商務艙機票，NT$37,098；另外買了保養品，也剪了頭髮。"},{"month":"2026/07","total":172114,"topCats":[["居家／修繕",91904],["日常生活",33489],["寵物",8407],["醫療／保健",8046],["購物／服飾",7740],["捐款",7282]],"topMerchants":[["房租｜現住處（房東 Sheena Melissa）",73840],["AEON BIG-JAYA ONE",17129],["IHERB IHERB.COM iherb.com NL",10221],["小米家電／用品",8170],["AM & PM Hair Studio an",7428],["台灣人壽７１１１９１９",7160],["Shopee MY Marketplace KualaLumpur MY",6908],["UNIQLO TRX",3760]],"story":"這個月比較多電影和餐廳聚餐，沒有特別大筆的支出。"},{"month":"2026/08","total":163668,"topCats":[["居家／修繕",37836],["醫療／保健",34093],["日常生活",33436],["保險／保費",30827],["寵物",10437],["捐款",7611]],"topMerchants":[["2026/08/30 17:14｜手機轉帳｜8120020350100011337 ",30000],["房租｜現住處（房東 Sheena Melissa）",24364],["AEON BIG-JAYA ONE",14307],["2026/08/06 09:42｜電子轉出｜(009)005185011688930",9266],["ANGIE EARSPA-PJ",8858],["遠雄續期保費９９６９５",8813],["富邦人壽Ａ２＊＊７６３０１１１５０８",6894],["2026/08/06 09:43｜電子轉出｜(009)005185011688930",5854]],"story":"其中 NT$30,000 是 12/7 手術的訂金；除了置產（不計入這份消費統計）之外，沒有其他特別的事件。"}]};</script>
+<script>
+(function(){
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+  const months = DATA.months, cats = DATA.categories;
+  const monthLabels = months.map(m => m.split('/')[1] + '月');
+
+  document.getElementById('figTotal').textContent = fmt(DATA.grandTotal);
+  document.getElementById('figRange').textContent = months[0] + '–' + months[months.length-1];
+  document.getElementById('figAvg').textContent = 'NT$' + fmt(DATA.avgMonthly);
+
+  /* ---- monthly review ---- */
+  (function(){
+    const monthly = DATA.monthly, avg = DATA.avgMonthly;
+    const rvMonths = document.getElementById('rvMonths');
+    rvMonths.innerHTML = monthly.map((m,i) => {
+      const lbl = m.month.split('/')[1] + '月';
+      return `<button class="rv-m${m.story ? ' flag' : ''}" type="button" data-i="${i}" aria-pressed="false">${lbl}<span class="amt">${Math.round(m.total/1000)}k</span></button>`;
+    }).join('');
+
+    function renderReview(i){
+      const m = monthly[i];
+      rvMonths.querySelectorAll('.rv-m').forEach((b,bi) => b.setAttribute('aria-pressed', bi === i));
+      document.getElementById('rvMonthLbl').textContent = m.month.split('/')[1] + '月';
+      document.getElementById('rvTotal').textContent = 'NT$' + fmt(m.total);
+      const dev = (m.total - avg) / avg;
+      const devEl = document.getElementById('rvDev');
+      devEl.textContent = `${dev > 0 ? '+' : ''}${Math.round(dev*100)}% ・ 月均 NT$${fmt(avg)}`;
+      devEl.className = 'rv-dev ' + (dev > 0 ? 'up' : '');
+      const storyEl = document.getElementById('rvStory');
+      if (m.story){ storyEl.hidden = false; storyEl.textContent = '📝 ' + m.story; }
+      else { storyEl.hidden = true; }
+      const maxCat = Math.max(...m.topCats.map(c => c[1]), 1);
+      document.getElementById('rvCats').innerHTML = m.topCats.map(([n,v]) => `
+        <div class="rv-row"><span class="nm">${n}</span><span class="bt"><i style="width:${Math.max(v/maxCat*100,3)}%"></i></span><span class="amt">${fmt(v)}</span></div>`).join('');
+      const maxMer = Math.max(...m.topMerchants.map(c => c[1]), 1);
+      document.getElementById('rvMerchants').innerHTML = m.topMerchants.map(([n,v]) => `
+        <div class="rv-row"><span class="nm" title="${n}">${n}</span><span class="bt"><i style="width:${Math.max(v/maxMer*100,3)}%"></i></span><span class="amt">${fmt(v)}</span></div>`).join('');
+    }
+    rvMonths.addEventListener('click', e => {
+      const b = e.target.closest('.rv-m'); if (!b) return;
+      renderReview(+b.dataset.i);
+    });
+    renderReview(3);
+  })();
+
+  /* ---- theme toggle ---- */
+  const root = document.documentElement, tb = document.getElementById('themeBtn');
+  tb.addEventListener('click', () => {
+    const cur = root.getAttribute('data-theme');
+    const sysDark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+    const next = cur ? (cur === 'dark' ? 'light' : 'dark') : (sysDark ? 'light' : 'dark');
+    root.setAttribute('data-theme', next);
+  });
+
+  /* ---- tooltip ---- */
+  const tip = document.getElementById('tip');
+  function showTip(html, x, y){
+    tip.innerHTML = html; tip.style.opacity = '1';
+    const r = tip.getBoundingClientRect();
+    let left = x + 14, top = y - r.height - 10;
+    if (left + r.width > window.innerWidth - 8) left = x - r.width - 14;
+    if (top < 8) top = y + 16;
+    tip.style.left = left + 'px'; tip.style.top = top + 'px';
+  }
+  const hideTip = () => tip.style.opacity = '0';
+
+  /* ---- trend chart ---- */
+  const mt = DATA.monthlyTotal, avg = DATA.avgMonthly;
+  const axisMax = Math.ceil(Math.max(...mt) / 50000) * 50000;
+  const grid = document.getElementById('trendGrid');
+  const steps = 4;
+  grid.innerHTML = Array.from({length: steps+1}, (_,i) => {
+    const val = axisMax - i*(axisMax/steps);
+    return `<div><span>${val ? fmt(val) : '0'}</span></div>`;
+  }).join('');
+  const avgPct = (1 - avg/axisMax) * 100;
+  const avgLine = document.getElementById('avgLine');
+  avgLine.style.top = (avgPct/100*(236-26)) + 'px';
+  document.getElementById('avgLineLabel').textContent = '月均 NT$' + fmt(avg);
+
+  const tbars = document.getElementById('tbars');
+  tbars.innerHTML = mt.map((v,i) => {
+    const h = v/axisMax*100;
+    const dev = (v-avg)/avg;
+    const isHigh = Math.abs(dev) > 0.2;
+    return `<div class="tbar-col${isHigh?' high':''}" data-i="${i}">
+      <div class="flag">${dev>0?'+':''}${Math.round(dev*100)}%</div>
+      <div class="tbar" style="height:${h}%"></div>
+      <div class="mlab">${monthLabels[i]}</div>
+    </div>`;
+  }).join('');
+  tbars.querySelectorAll('.tbar-col').forEach(col => {
+    const i = +col.dataset.i, v = mt[i], dev = (v-avg)/avg;
+    const move = e => showTip(
+      `<div class="h">${months[i]}</div>
+       <div class="row"><span class="muted">總支出</span><b>NT$${fmt(v)}</b></div>
+       <div class="row"><span class="muted">與月均相比</span><b>${dev>0?'+':''}${Math.round(dev*100)}%</b></div>`,
+      e.clientX, e.clientY);
+    col.addEventListener('mouseenter', move);
+    col.addEventListener('mousemove', move);
+    col.addEventListener('mouseleave', hideTip);
+  });
+
+  /* ---- anomaly callouts: what drove each flagged month ---- */
+  const flagged = mt.map((v,i) => ({i, v, dev:(v-avg)/avg})).filter(f => Math.abs(f.dev) > 0.2);
+  const anomalyGrid = document.getElementById('anomalyGrid');
+  const anomalyLead = document.getElementById('anomalyLead');
+  if (!flagged.length){
+    anomalyLead.textContent = '8 個月支出都在月均 ±20% 以內，沒有明顯偏離的月份。';
+  } else {
+    anomalyGrid.innerHTML = flagged.map(f => {
+      const drivers = cats.map(c => ({name:c.name, diff:c.monthly[f.i]-c.mean}))
+        .sort((a,b) => Math.abs(b.diff)-Math.abs(a.diff)).slice(0,4);
+      const sameSign = drivers.filter(d => (f.dev > 0 ? d.diff > 0 : d.diff < 0));
+      const names = (sameSign.length ? sameSign : drivers).slice(0,2).map(d => d.name).join('、');
+      const headline = f.dev > 0
+        ? `主要是${names}同時比平常花得多。`
+        : `${names}同步降溫，比平常少花，是全年較平淡的月份。`;
+      const rows = drivers.map(d =>
+        `<div class="am-row"><span>${d.name}</span><b class="${d.diff >= 0 ? 'pos' : 'neg'}">${d.diff >= 0 ? '+' : '−'}NT$${fmt(Math.abs(d.diff))}</b></div>`
+      ).join('');
+      return `<div class="am-card ${f.dev > 0 ? 'up' : 'down'}">
+        <div class="am-head"><span class="m">${monthLabels[f.i]}</span><span class="dev">${f.dev > 0 ? '+' : ''}${Math.round(f.dev*100)}%</span></div>
+        <div class="am-line">${headline}</div>
+        ${rows}
+      </div>`;
+    }).join('');
+  }
+
+  /* ---- heatmap ---- */
+  const heat = document.getElementById('heat');
+  let cells = [`<div class="hh name">分類</div>`];
+  monthLabels.forEach(m => cells.push(`<div class="hh">${m}</div>`));
+  cells.push(`<div class="hh">合計</div>`);
+  cats.forEach(c => {
+    const rowMax = Math.max(...c.monthly, 1);
+    cells.push(`<div class="rname" data-cat="${c.name}">${c.name}</div>`);
+    c.monthly.forEach((v,i) => {
+      const inten = v/rowMax;
+      const hi = inten > 0.5;
+      cells.push(`<div class="heat-cell${v===0?' zero':''}${hi?' hi':''}" style="--i:${v===0?0:Math.max(inten*0.85+0.08,0.1)}"
+        data-cat="${c.name}" data-mi="${i}" title="${c.name} · ${monthLabels[i]}：NT$${fmt(v)}">
+        <span class="v">${v===0?'–':(v>=10000?Math.round(v/1000)+'k':fmt(v))}</span></div>`);
+    });
+    cells.push(`<div class="rtotal">NT$${fmt(c.total)}<span class="pct">${Math.round(c.share*1000)/10}%</span></div>`);
+  });
+  heat.innerHTML = cells.join('');
+  heat.querySelectorAll('.heat-cell').forEach(cell => {
+    const catName = cell.dataset.cat, mi = +cell.dataset.mi;
+    const c = cats.find(x => x.name === catName);
+    const move = e => showTip(
+      `<div class="h">${catName} · ${monthLabels[mi]}</div>
+       <div class="row"><span class="muted">金額</span><b>NT$${fmt(c.monthly[mi])}</b></div>
+       <div class="row"><span class="muted">該分類月均</span><b>NT$${fmt(c.mean)}</b></div>`,
+      e.clientX, e.clientY);
+    cell.addEventListener('mouseenter', move);
+    cell.addEventListener('mousemove', move);
+    cell.addEventListener('mouseleave', hideTip);
+    cell.addEventListener('click', () => selectCat(catName));
+  });
+  heat.querySelectorAll('.rname').forEach(el => el.addEventListener('click', () => selectCat(el.dataset.cat)));
+
+  /* ---- ranked list + drilldown ---- */
+  const rkList = document.getElementById('rkList');
+  const maxTotal = Math.max(...cats.map(c => c.total));
+  rkList.innerHTML = cats.map(c => {
+    const badge = c.cv >= 1 ? `<span class="badge lumpy">不定期</span>`
+      : c.cv >= 0.6 ? `<span class="badge">中度波動</span>`
+      : `<span class="badge steady">穩定</span>`;
+    return `<div class="rk-row" data-cat="${c.name}">
+      <span class="nm">${c.name}</span>
+      <span class="bt"><i style="width:${Math.max(c.total/maxTotal*100,2)}%"></i></span>
+      ${badge}
+      <span class="vv">NT$${fmt(c.total)} · ${Math.round(c.share*1000)/10}%</span>
+    </div>`;
+  }).join('');
+
+  function selectCat(name){
+    const c = cats.find(x => x.name === name);
+    document.querySelectorAll('.rk-row').forEach(r => r.classList.toggle('active', r.dataset.cat === name));
+    document.querySelectorAll('.rname').forEach(r => r.classList.toggle('active', r.dataset.cat === name));
+    const rowMax = Math.max(...c.monthly, 1);
+    const mini = c.monthly.map((v,i) => `<div class="dcol"><div class="dbar" style="height:${Math.max(v/rowMax*100,1)}%"
+      title="${monthLabels[i]}：NT$${fmt(v)}"></div><span class="dlab">${monthLabels[i]}</span></div>`).join('');
+    const pattern = c.cv >= 1 ? '不定期 / 偶發大額' : c.cv >= 0.6 ? '中度波動' : '穩定，每月差不多';
+    const subRows = (c.subcats||[]).map(([n,v]) => `<div class="row"><span class="nm">${n}</span><span class="amt">${fmt(v)}</span></div>`).join('')
+      || '<div class="row"><span class="nm muted">（無細項資料）</span></div>';
+    const merRows = (c.merchants||[]).map(([n,v]) => `<div class="row"><span class="nm">${n}</span><span class="amt">${fmt(v)}</span></div>`).join('')
+      || '<div class="row"><span class="nm muted">（無明細資料）</span></div>';
+    document.getElementById('drill').innerHTML = `
+      <div class="drill-head">
+        <h3>${c.name}</h3>
+        <span class="stat">8 個月合計 <b>NT$${fmt(c.total)}</b>（佔整體 ${Math.round(c.share*1000)/10}%）</span>
+        <span class="stat">月均 NT$${fmt(c.mean)} · 最高 ${c.maxMonth.split('/')[1]}月 NT$${fmt(c.max)}</span>
+        <span class="stat">波動型態：<b>${pattern}</b></span>
+      </div>
+      ${c.note ? `<p class="drill-note">📝 ${c.note}</p>` : ''}
+      <div class="drill-grid">
+        <div>
+          <h4 style="margin:0 0 10px;font-size:12px;font-weight:600;color:var(--ink-2)">月度分佈</h4>
+          <div class="drill-mini">${mini}</div>
+        </div>
+        <div class="drill-list"><h4>子分類 Top</h4>${subRows}</div>
+        <div class="drill-list"><h4>店家 / 描述 Top</h4>${merRows}</div>
+      </div>`;
+  }
+  rkList.querySelectorAll('.rk-row').forEach(r => r.addEventListener('click', () => selectCat(r.dataset.cat)));
+  selectCat(cats[0].name);
+})();
+</script>
+
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>

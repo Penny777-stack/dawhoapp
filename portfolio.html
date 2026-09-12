@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>投資組合總覽</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#f4f2ec; --surface:#fbfaf7; --surface-2:#f0eee6;
+    --ink:#1c1b17; --ink-2:#57544c; --muted:#8a867a;
+    --hair:#e4e1d6; --hair-strong:#d3cfc1;
+    --accent:#0a8f7c; --accent-soft:#e0f0ec;
+    --c-tw:#0a8f7c; --c-us:#2a78d6; --c-crypto:#e0692f;
+    --c-gain:#c0392b; --c-loss:#1a8f4c;
+    --shadow:0 1px 2px rgba(28,27,23,.05), 0 8px 24px -12px rgba(28,27,23,.12);
+    --serif:"Fraunces", ui-serif, Georgia, "Songti TC", serif;
+    --sans:"IBM Plex Sans", "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+    --mono:"IBM Plex Mono", "PingFang TC", "Microsoft JhengHei", ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#121310; --surface:#1b1c18; --surface-2:#232420;
+      --ink:#f3f1e8; --ink-2:#b8b4a6; --muted:#86837a;
+      --hair:#2c2d27; --hair-strong:#3a3b33;
+      --accent:#26b39c; --accent-soft:#123029;
+      --c-tw:#1fa48f; --c-us:#3987e5; --c-crypto:#dd6636;
+      --c-gain:#e2635f; --c-loss:#3ecf82;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#121310; --surface:#1b1c18; --surface-2:#232420;
+    --ink:#f3f1e8; --ink-2:#b8b4a6; --muted:#86837a;
+    --hair:#2c2d27; --hair-strong:#3a3b33;
+    --accent:#26b39c; --accent-soft:#123029;
+    --c-tw:#1fa48f; --c-us:#3987e5; --c-crypto:#dd6636;
+    --c-gain:#e2635f; --c-loss:#3ecf82;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--bg); color:var(--ink); font-family:var(--sans);
+    line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+  .wrap{max-width:1080px; margin:0 auto; padding:clamp(20px,5vw,56px) clamp(16px,4vw,32px) 72px;}
+
+  header.top{display:flex; flex-wrap:wrap; gap:24px 40px; align-items:flex-end;
+    justify-content:space-between; padding-bottom:28px; border-bottom:1px solid var(--hair-strong);}
+  .eyebrow{font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); font-weight:600; margin:0 0 10px;}
+  h1{font-family:var(--serif); font-weight:500; font-size:clamp(26px,4vw,36px);
+    line-height:1.15; margin:0 0 8px; letter-spacing:-.01em; text-wrap:balance;}
+  .sub{margin:0; color:var(--ink-2); font-size:14.5px; max-width:50ch;}
+  .headline{text-align:right; flex-shrink:0;}
+  .headline .fig{font-family:var(--serif); font-weight:500; font-size:clamp(34px,6vw,52px);
+    line-height:1; color:var(--accent); letter-spacing:-.02em;}
+  .headline .fig .cur{font-size:.42em; color:var(--ink-2); font-weight:500; margin-right:.15em; letter-spacing:0;}
+  .headline .cap{margin-top:8px; font-size:13px; color:var(--muted);}
+  .headline .cap b{font-weight:600; font-variant-numeric:tabular-nums;}
+  .headline .cap b.gain{color:var(--c-gain);} .headline .cap b.loss{color:var(--c-loss);}
+
+  .theme-btn{position:fixed; top:14px; right:14px; z-index:20; border:1px solid var(--hair-strong);
+    background:var(--surface); color:var(--ink-2); border-radius:999px; padding:6px 12px;
+    font-family:var(--sans); font-size:12px; cursor:pointer; box-shadow:var(--shadow);}
+  .theme-btn:hover{color:var(--ink)}
+
+  section{margin-top:44px;}
+  .sec-head{display:flex; align-items:baseline; gap:12px; margin-bottom:16px; flex-wrap:wrap;}
+  h2{font-family:var(--serif); font-weight:500; font-size:20px; margin:0; letter-spacing:-.01em;}
+  .sec-head .note{font-size:12.5px; color:var(--muted);}
+
+  .card{background:var(--surface); border:1px solid var(--hair); border-radius:14px;
+    padding:22px; box-shadow:var(--shadow);}
+
+  /* ---------- tiles ---------- */
+  .tiles{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  .tile{background:var(--surface); border:1px solid var(--hair); border-radius:12px;
+    padding:16px 18px; box-shadow:var(--shadow);}
+  .tile .k{font-size:12.5px; color:var(--ink-2); font-weight:600; display:flex; gap:7px; align-items:center;}
+  .tile .dot{width:8px; height:8px; border-radius:2px; flex:none;}
+  .tile .v{font-family:var(--mono); font-size:22px; font-weight:500; margin-top:10px; letter-spacing:-.01em;}
+  .tile .m{font-size:12px; margin-top:4px; font-variant-numeric:tabular-nums; font-family:var(--mono);}
+  .tile .m.gain{color:var(--c-gain);} .tile .m.loss{color:var(--c-loss);}
+  .tile .track{height:5px; border-radius:3px; background:var(--surface-2); margin-top:12px; overflow:hidden;}
+  .tile .track i{display:block; height:100%; border-radius:3px;}
+
+  /* ---------- allocation ---------- */
+  .alloc-split{display:flex; height:26px; border-radius:8px; overflow:hidden; gap:2px;}
+  .alloc-split i{display:block; height:100%;}
+  .alloc-legend{display:flex; gap:20px; margin-top:12px; font-size:12.5px; color:var(--ink-2); flex-wrap:wrap;}
+  .alloc-legend span{display:flex; align-items:center; gap:7px;}
+  .alloc-legend i{width:10px; height:10px; border-radius:3px;}
+  .alloc-legend b{font-family:var(--mono); color:var(--ink); margin-left:2px;}
+
+  /* ---------- highlight cards ---------- */
+  .hl-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px;}
+  .hl-card{border:1px solid var(--hair); border-radius:12px; padding:14px 16px; background:var(--surface-2);}
+  .hl-card h4{margin:0 0 10px; font-size:12px; font-weight:600; color:var(--ink-2);}
+  .hl-row{display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:5px 0;
+    font-size:13px; border-bottom:1px solid var(--hair);}
+  .hl-row:last-child{border-bottom:none;}
+  .hl-row .nm{color:var(--ink); font-weight:500;}
+  .hl-row .amt{font-family:var(--mono); font-size:12.5px; white-space:nowrap;}
+  .hl-row .amt.gain{color:var(--c-gain);} .hl-row .amt.loss{color:var(--c-loss);}
+
+  /* ---------- table ---------- */
+  .filters{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; align-items:center;}
+  .filters .grp{display:flex; gap:6px; background:var(--surface-2); padding:4px; border-radius:999px;}
+  .chip{border:none; background:transparent; color:var(--ink-2); font-family:var(--sans); font-size:12.5px;
+    padding:4px 12px; border-radius:999px; cursor:pointer; white-space:nowrap;}
+  .chip[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:var(--shadow); font-weight:600;}
+  .filters .count{margin-left:auto; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;}
+
+  .tbl-scroll{overflow-x:auto; border:1px solid var(--hair); border-radius:12px; background:var(--surface);
+    box-shadow:var(--shadow);}
+  table{border-collapse:collapse; width:100%; min-width:720px; font-size:13px;}
+  thead th{position:sticky; top:0; background:var(--surface); text-align:left; font-weight:600;
+    color:var(--ink-2); padding:11px 14px; border-bottom:1px solid var(--hair-strong);
+    cursor:pointer; white-space:nowrap; user-select:none; font-size:12px; letter-spacing:.02em;}
+  thead th .ar{color:var(--muted); font-size:10px; margin-left:3px;}
+  thead th.num, td.num{text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums;}
+  tbody td{padding:10px 14px; border-bottom:1px solid var(--hair); color:var(--ink-2); vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover td{background:var(--surface-2);}
+  td.item{color:var(--ink); font-weight:500; white-space:nowrap;}
+  .pill{display:inline-block; white-space:nowrap; font-size:11px; padding:1px 8px; border-radius:999px;
+    font-weight:600; border:1px solid var(--hair-strong); color:var(--ink-2);}
+  .pill.tw{background:color-mix(in srgb, var(--c-tw) 15%, transparent); border-color:transparent; color:var(--c-tw);}
+  .pill.us{background:color-mix(in srgb, var(--c-us) 15%, transparent); border-color:transparent; color:var(--c-us);}
+  .pill.crypto{background:color-mix(in srgb, var(--c-crypto) 15%, transparent); border-color:transparent; color:var(--c-crypto);}
+  .pill.na{color:var(--muted);}
+  td.num.gain{color:var(--c-gain);} td.num.loss{color:var(--c-loss);}
+
+  footer{margin-top:44px; padding-top:18px; border-top:1px solid var(--hair);
+    font-size:11.5px; color:var(--muted); line-height:1.7;}
+  footer code{font-family:var(--mono); color:var(--ink-2);}
+
+  @media (max-width:720px){
+    header.top{flex-direction:column; align-items:flex-start;}
+    .headline{text-align:left;}
+    .tiles{grid-template-columns:1fr;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+</style>
+<style>.pwa-back{position:fixed;top:14px;left:14px;z-index:20;border:1px solid var(--hair-strong,#d3cfc1);
+  background:var(--surface,#fbfaf7);color:var(--ink-2,#57544c);border-radius:999px;padding:6px 13px;
+  font-family:var(--sans,sans-serif);font-size:12px;text-decoration:none;box-shadow:var(--shadow,0 1px 2px rgba(0,0,0,.1));}
+.pwa-back:hover{color:var(--ink,#1c1b17);}</style>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#f4f2ec">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="資產App">
+
+</head>
+<body>
+<a href="./index.html" class="pwa-back">← 返回首頁</a>
+
+
+<button class="theme-btn" id="themeBtn" type="button">◑ 主題</button>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">資產 App · 投資明細分頁</p>
+      <h1>投資組合總覽</h1>
+      <p class="sub">台股、美股、加密貨幣（幣安／Kraken）持倉快照，看資產怎麼分佈、賺賠在哪裡。</p>
+    </div>
+    <div class="headline">
+      <div class="fig"><span class="cur">NT$</span><span id="figTotal">—</span></div>
+      <div class="cap">總市值 · 未實現損益 <b id="figUpl">—</b></div>
+    </div>
+  </header>
+
+  <section id="tiles-sec">
+    <div class="sec-head"><h2>三大類資產</h2><span class="note">市值與未實現損益（紅漲綠跌）</span></div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section id="alloc">
+    <div class="sec-head"><h2>資產配置</h2><span class="note">依市值佔比</span></div>
+    <div class="card">
+      <div class="alloc-split" id="allocSplit"></div>
+      <div class="alloc-legend" id="allocLegend"></div>
+    </div>
+  </section>
+
+  <section id="hl">
+    <div class="sec-head"><h2>賺最多／賠最多</h2><span class="note">依未實現損益金額排序，股票＋加密貨幣合併看</span></div>
+    <div class="hl-grid">
+      <div class="hl-card"><h4>賺最多 Top 5</h4><div id="hlGain"></div></div>
+      <div class="hl-card"><h4>賠最多 Top 5</h4><div id="hlLoss"></div></div>
+    </div>
+  </section>
+
+  <section id="stocks">
+    <div class="sec-head"><h2>股票明細（台股／美股）</h2><span class="note">點欄位標題排序</span></div>
+    <div class="filters">
+      <div class="grp" data-filter="market">
+        <button class="chip" data-v="all" aria-pressed="true">全部</button>
+        <button class="chip" data-v="TW" aria-pressed="false">台股</button>
+        <button class="chip" data-v="US" aria-pressed="false">美股</button>
+      </div>
+      <span class="count" id="stockCount"></span>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th data-sort="ticker">代號<span class="ar"></span></th>
+          <th data-sort="market">市場<span class="ar"></span></th>
+          <th class="num" data-sort="qty">股數<span class="ar"></span></th>
+          <th class="num" data-sort="price">股價<span class="ar"></span></th>
+          <th class="num" data-sort="twdMv">台幣市值<span class="ar">▾</span></th>
+          <th class="num" data-sort="cost">成本(TWD)<span class="ar"></span></th>
+          <th class="num" data-sort="upl">未實現損益<span class="ar"></span></th>
+          <th class="num" data-sort="pct">報酬率<span class="ar"></span></th>
+        </tr></thead>
+        <tbody id="stockBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="cryptos">
+    <div class="sec-head"><h2>加密貨幣明細（幣安／Kraken）</h2><span class="note">部分幣種成本為 0（空投／贈送）或不適用（薪資入帳），已標註</span></div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th data-sort="coin">幣種<span class="ar"></span></th>
+          <th data-sort="platform">平台<span class="ar"></span></th>
+          <th class="num" data-sort="qty">持有數量<span class="ar"></span></th>
+          <th class="num" data-sort="usdPrice">美元價格<span class="ar"></span></th>
+          <th class="num" data-sort="twdMv">台幣市值<span class="ar">▾</span></th>
+          <th class="num" data-sort="cost">成本(TWD)<span class="ar"></span></th>
+          <th class="num" data-sort="upl">未實現損益<span class="ar"></span></th>
+          <th>備註</th>
+        </tr></thead>
+        <tbody id="cryptoBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    資料來源：Google 試算表「投資明細」分頁，為持倉快照（非逐筆交易紀錄），股票報價約 2026/08 底、加密貨幣對帳截止 2026/08/29。<br>
+    Kraken 的 51,845.87 USDT 為薪資入帳、非投資取得，成本欄位標示「不適用」，未列入加密貨幣的成本與損益合計；ETH、USDG、SOLV、ACH、ETHW 幾筆成本為 0，是交易所空投／贈送（使用者確認），未實現損益等於市值全額。<br>
+    台股代號沒有另外標公司名稱，避免猜錯；如果想加上名稱對照，跟我說一聲即可更新。
+  </footer>
+</div>
+
+<script>const DATA = {"stocks":[{"ticker":"QQQ","qty":23.0,"cur":"USD","price":708.69,"mv":16299.87,"twdMv":516062.03,"cost":243191.9,"upl":272870.13,"market":"US","pct":112.2},{"ticker":"VOO","qty":41.30843,"cur":"USD","price":696.65,"mv":28777.51776,"twdMv":911110.6,"cost":754105.94,"upl":157004.67,"market":"US","pct":20.8},{"ticker":"NOC","qty":1.02314,"cur":"USD","price":518.95,"mv":530.958503,"twdMv":16810.41,"cost":14255.14,"upl":2555.27,"market":"US","pct":17.9},{"ticker":"NUE","qty":0.01026,"cur":"USD","price":255.46,"mv":2.6210196,"twdMv":82.98,"cost":63.32,"upl":19.66,"market":"US","pct":31.1},{"ticker":"ONDS","qty":200.0,"cur":"USD","price":7.25,"mv":1450,"twdMv":45907.72,"cost":60154.95,"upl":-14247.23,"market":"US","pct":-23.7},{"ticker":"QQQ","qty":89.20042,"cur":"USD","price":708.69,"mv":63215.44565,"twdMv":2001432.62,"cost":1658292.77,"upl":343139.84,"market":"US","pct":20.7},{"ticker":"XAR","qty":43.01218,"cur":"USD","price":244.66,"mv":10523.35996,"twdMv":333174.84,"cost":355071.24,"upl":-21896.4,"market":"US","pct":-6.2},{"ticker":"2330","qty":85.0,"cur":"TWD","price":2415,"mv":205275,"twdMv":205275,"cost":204850.0,"upl":425,"market":"TW","pct":0.2},{"ticker":"2727","qty":1.0,"cur":"TWD","price":230,"mv":230,"twdMv":230,"cost":219.0,"upl":11,"market":"TW","pct":5.0},{"ticker":"6788","qty":1200.0,"cur":"TWD","price":379.5,"mv":455400,"twdMv":455400,"cost":420600.0,"upl":34800,"market":"TW","pct":8.3},{"ticker":"5289","qty":140.0,"cur":"TWD","price":1420,"mv":198800,"twdMv":198800,"cost":218400.0,"upl":-19600,"market":"TW","pct":-9.0},{"ticker":"3714","qty":1200.0,"cur":"TWD","price":61.1,"mv":73320,"twdMv":73320,"cost":80148.0,"upl":-6828,"market":"TW","pct":-8.5},{"ticker":"7788","qty":40.0,"cur":"TWD","price":292.5,"mv":11700,"twdMv":11700,"cost":7000.0,"upl":4700,"market":"TW","pct":67.1},{"ticker":"8039","qty":100.0,"cur":"TWD","price":274,"mv":27400,"twdMv":27400,"cost":12700.0,"upl":14700,"market":"TW","pct":115.7},{"ticker":"8147","qty":2000.0,"cur":"TWD","price":126,"mv":252000,"twdMv":252000,"cost":332280.0,"upl":-80280,"market":"TW","pct":-24.2},{"ticker":"00631L","qty":100.0,"cur":"TWD","price":35.78,"mv":3578,"twdMv":3578,"cost":3500.0,"upl":78,"market":"TW","pct":2.2}],"cryptos":[{"coin":"BTC","qty":1.658582,"usdPrice":76843.5,"twdMv":4035170.17,"cost":4881503.59,"upl":-846333.42,"platform":"Binance","naCost":false,"airdrop":false},{"coin":"AVAX","qty":510.772808,"usdPrice":6.325,"twdMv":102283.61,"cost":384708.32,"upl":-282424.7,"platform":"Binance","naCost":false,"airdrop":false},{"coin":"SOL","qty":312.388622,"usdPrice":99.3104,"twdMv":982217.59,"cost":1136769.62,"upl":-154552.03,"platform":"Binance","naCost":false,"airdrop":false},{"coin":"USDT","qty":813.032003,"usdPrice":1,"twdMv":25741.0,"cost":25190.99,"upl":550.01,"platform":"Binance","naCost":false,"airdrop":false},{"coin":"ETH","qty":0.15265,"usdPrice":2448.7638,"twdMv":11834.82,"cost":0,"upl":11834.82,"platform":"Kraken","naCost":false,"airdrop":true},{"coin":"BTC","qty":0.28149,"usdPrice":76843.5,"twdMv":684838.04,"cost":758480.12,"upl":-73642.07,"platform":"Kraken","naCost":false,"airdrop":false},{"coin":"SOL","qty":0.69741,"usdPrice":99.3104,"twdMv":2192.81,"cost":3133.06,"upl":-940.25,"platform":"Kraken","naCost":false,"airdrop":false},{"coin":"USDT","qty":51845.87,"usdPrice":1,"twdMv":1641466.17,"cost":null,"upl":null,"platform":"Kraken","naCost":true,"airdrop":false},{"coin":"USDG","qty":612.2,"usdPrice":1,"twdMv":19382.56,"cost":0.0,"upl":19382.56,"platform":"Kraken","naCost":false,"airdrop":true},{"coin":"SOLV","qty":1326.214928,"usdPrice":0.00299,"twdMv":125.55,"cost":0.0,"upl":125.55,"platform":"Binance","naCost":false,"airdrop":true},{"coin":"ACH","qty":5.050748,"usdPrice":0.00497,"twdMv":0.79,"cost":0.0,"upl":0.79,"platform":"Binance","naCost":false,"airdrop":true},{"coin":"ETHW","qty":0.044326,"usdPrice":0.273788,"twdMv":0.38,"cost":0.0,"upl":0.38,"platform":"Binance","naCost":false,"airdrop":true}],"summary":{"twTotal":1227703,"usTotal":3824581,"cryptoTotal":7505253,"grand":12557538,"twCost":1279697,"usCost":3085135,"cryptoCost":7189786,"twUpl":-51994,"usUpl":739446,"cryptoUpl":-1325998},"items":[{"name":"QQQ","cat":"stock","mkt":"US","upl":343139.84,"twdMv":2001432.62,"pct":20.7},{"name":"QQQ","cat":"stock","mkt":"US","upl":272870.13,"twdMv":516062.03,"pct":112.2},{"name":"VOO","cat":"stock","mkt":"US","upl":157004.67,"twdMv":911110.6,"pct":20.8},{"name":"6788","cat":"stock","mkt":"TW","upl":34800,"twdMv":455400,"pct":8.3},{"name":"USDG（Kraken）","cat":"crypto","mkt":"crypto","upl":19382.56,"twdMv":19382.56,"pct":null},{"name":"8039","cat":"stock","mkt":"TW","upl":14700,"twdMv":27400,"pct":115.7},{"name":"ETH（Kraken）","cat":"crypto","mkt":"crypto","upl":11834.82,"twdMv":11834.82,"pct":null},{"name":"7788","cat":"stock","mkt":"TW","upl":4700,"twdMv":11700,"pct":67.1},{"name":"NOC","cat":"stock","mkt":"US","upl":2555.27,"twdMv":16810.41,"pct":17.9},{"name":"USDT（Binance）","cat":"crypto","mkt":"crypto","upl":550.01,"twdMv":25741.0,"pct":2.2},{"name":"2330","cat":"stock","mkt":"TW","upl":425,"twdMv":205275,"pct":0.2},{"name":"SOLV（Binance）","cat":"crypto","mkt":"crypto","upl":125.55,"twdMv":125.55,"pct":null},{"name":"00631L","cat":"stock","mkt":"TW","upl":78,"twdMv":3578,"pct":2.2},{"name":"NUE","cat":"stock","mkt":"US","upl":19.66,"twdMv":82.98,"pct":31.1},{"name":"2727","cat":"stock","mkt":"TW","upl":11,"twdMv":230,"pct":5.0},{"name":"ACH（Binance）","cat":"crypto","mkt":"crypto","upl":0.79,"twdMv":0.79,"pct":null},{"name":"ETHW（Binance）","cat":"crypto","mkt":"crypto","upl":0.38,"twdMv":0.38,"pct":null},{"name":"SOL（Kraken）","cat":"crypto","mkt":"crypto","upl":-940.25,"twdMv":2192.81,"pct":-30.0},{"name":"3714","cat":"stock","mkt":"TW","upl":-6828,"twdMv":73320,"pct":-8.5},{"name":"ONDS","cat":"stock","mkt":"US","upl":-14247.23,"twdMv":45907.72,"pct":-23.7},{"name":"5289","cat":"stock","mkt":"TW","upl":-19600,"twdMv":198800,"pct":-9.0},{"name":"XAR","cat":"stock","mkt":"US","upl":-21896.4,"twdMv":333174.84,"pct":-6.2},{"name":"BTC（Kraken）","cat":"crypto","mkt":"crypto","upl":-73642.07,"twdMv":684838.04,"pct":-9.7},{"name":"8147","cat":"stock","mkt":"TW","upl":-80280,"twdMv":252000,"pct":-24.2},{"name":"SOL（Binance）","cat":"crypto","mkt":"crypto","upl":-154552.03,"twdMv":982217.59,"pct":-13.6},{"name":"AVAX（Binance）","cat":"crypto","mkt":"crypto","upl":-282424.7,"twdMv":102283.61,"pct":-73.4},{"name":"BTC（Binance）","cat":"crypto","mkt":"crypto","upl":-846333.42,"twdMv":4035170.17,"pct":-17.3}]};</script>
+<script>
+(function(){
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+  const signed = (n, unit) => `${n>=0?'+':'−'}${unit||''}${fmt(Math.abs(n))}`;
+  const S = DATA.summary;
+
+  const totalUpl = S.twUpl + S.usUpl + S.cryptoUpl;
+  document.getElementById('figTotal').textContent = fmt(S.grand);
+  const uplEl = document.getElementById('figUpl');
+  uplEl.textContent = signed(totalUpl, 'NT$');
+  uplEl.className = totalUpl >= 0 ? 'gain' : 'loss';
+
+  /* ---- theme toggle ---- */
+  const root = document.documentElement, tb = document.getElementById('themeBtn');
+  tb.addEventListener('click', () => {
+    const cur = root.getAttribute('data-theme');
+    const sysDark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+    const next = cur ? (cur === 'dark' ? 'light' : 'dark') : (sysDark ? 'light' : 'dark');
+    root.setAttribute('data-theme', next);
+  });
+
+  /* ---- tiles ---- */
+  const catInfo = [
+    {k:'twTotal', uplK:'twUpl', label:'台股', color:'var(--c-tw)'},
+    {k:'usTotal', uplK:'usUpl', label:'美股', color:'var(--c-us)'},
+    {k:'cryptoTotal', uplK:'cryptoUpl', label:'加密貨幣', color:'var(--c-crypto)'},
+  ];
+  document.getElementById('tiles').innerHTML = catInfo.map(c => {
+    const v = S[c.k], upl = S[c.uplK], pct = Math.round(v/S.grand*100);
+    return `<div class="tile">
+      <div class="k"><span class="dot" style="background:${c.color}"></span>${c.label}</div>
+      <div class="v">NT$${fmt(v)}</div>
+      <div class="m ${upl>=0?'gain':'loss'}">${signed(upl)}</div>
+      <div class="track"><i style="width:${pct}%;background:${c.color}"></i></div>
+    </div>`;
+  }).join('');
+
+  /* ---- allocation ---- */
+  document.getElementById('allocSplit').innerHTML = catInfo.map(c =>
+    `<i style="width:${S[c.k]/S.grand*100}%;background:${c.color}"></i>`).join('');
+  document.getElementById('allocLegend').innerHTML = catInfo.map(c =>
+    `<span><i style="background:${c.color}"></i>${c.label}<b>${Math.round(S[c.k]/S.grand*1000)/10}%</b></span>`).join('');
+
+  /* ---- highlight gain/loss ---- */
+  const items = DATA.items;
+  const top5 = items.slice(0,5), bottom5 = items.slice(-5).reverse();
+  const row = it => `<div class="hl-row"><span class="nm">${it.name}</span><span class="amt ${it.upl>=0?'gain':'loss'}">${signed(it.upl)}${it.pct!=null?` (${it.pct>=0?'+':''}${it.pct}%)`:''}</span></div>`;
+  document.getElementById('hlGain').innerHTML = top5.map(row).join('');
+  document.getElementById('hlLoss').innerHTML = bottom5.map(row).join('');
+
+  /* ---- stock table ---- */
+  const stocks = DATA.stocks;
+  const stockBody = document.getElementById('stockBody');
+  let sSortKey='twdMv', sSortDir=-1, sFilter='all';
+  function renderStocks(){
+    let view = stocks.filter(s => sFilter==='all' || s.market===sFilter);
+    view.sort((a,b)=>{
+      let x=a[sSortKey], y=b[sSortKey];
+      if (typeof x==='string') return sSortDir*x.localeCompare(y);
+      return sSortDir*((x||0)-(y||0));
+    });
+    document.getElementById('stockCount').textContent = `${view.length} 筆`;
+    stockBody.innerHTML = view.map(s => `
+      <tr>
+        <td class="item">${s.ticker}</td>
+        <td><span class="pill ${s.market==='TW'?'tw':'us'}">${s.market==='TW'?'台股':'美股'}</span></td>
+        <td class="num">${s.qty.toLocaleString('en-US',{maximumFractionDigits:5})}</td>
+        <td class="num">${s.cur} ${s.price.toLocaleString('en-US',{maximumFractionDigits:2})}</td>
+        <td class="num">${fmt(s.twdMv)}</td>
+        <td class="num">${fmt(s.cost)}</td>
+        <td class="num ${s.upl>=0?'gain':'loss'}">${signed(s.upl)}</td>
+        <td class="num ${s.upl>=0?'gain':'loss'}">${s.pct!=null?(s.pct>=0?'+':'')+s.pct+'%':'－'}</td>
+      </tr>`).join('');
+    document.querySelectorAll('#stocks thead th').forEach(th=>{
+      const ar=th.querySelector('.ar');
+      if(ar) ar.textContent = th.dataset.sort===sSortKey ? (sSortDir<0?'▾':'▴') : '';
+    });
+  }
+  document.querySelectorAll('#stocks thead th').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const k=th.dataset.sort;
+      if(k===sSortKey) sSortDir*=-1; else { sSortKey=k; sSortDir = (k==='ticker'||k==='market')?1:-1; }
+      renderStocks();
+    });
+  });
+  document.querySelectorAll('#stocks .filters .grp .chip').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      sFilter = btn.dataset.v;
+      btn.parentElement.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed', c===btn));
+      renderStocks();
+    });
+  });
+  renderStocks();
+
+  /* ---- crypto table ---- */
+  const cryptos = DATA.cryptos;
+  const cryptoBody = document.getElementById('cryptoBody');
+  let cSortKey='twdMv', cSortDir=-1;
+  function renderCrypto(){
+    let view = cryptos.slice().sort((a,b)=>{
+      let x=a[cSortKey], y=b[cSortKey];
+      if (x==null) x = -Infinity; if (y==null) y = -Infinity;
+      if (typeof x==='string') return cSortDir*x.localeCompare(y);
+      return cSortDir*((x||0)-(y||0));
+    });
+    cryptoBody.innerHTML = view.map(c => {
+      const note = c.naCost ? '<span class="pill na">薪資入帳／不適用</span>'
+        : c.airdrop ? '<span class="pill na">空投／贈送</span>' : '－';
+      return `<tr>
+        <td class="item">${c.coin}</td>
+        <td><span class="pill crypto">${c.platform}</span></td>
+        <td class="num">${c.qty.toLocaleString('en-US',{maximumFractionDigits:6})}</td>
+        <td class="num">$${c.usdPrice.toLocaleString('en-US',{maximumFractionDigits:5})}</td>
+        <td class="num">${fmt(c.twdMv)}</td>
+        <td class="num">${c.cost!=null?fmt(c.cost):'－'}</td>
+        <td class="num ${c.upl==null?'':(c.upl>=0?'gain':'loss')}">${c.upl!=null?signed(c.upl):'－'}</td>
+        <td>${note}</td>
+      </tr>`;
+    }).join('');
+    document.querySelectorAll('#cryptos thead th').forEach(th=>{
+      const ar=th.querySelector('.ar');
+      if(ar) ar.textContent = th.dataset.sort===cSortKey ? (cSortDir<0?'▾':'▴') : '';
+    });
+  }
+  document.querySelectorAll('#cryptos thead th').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const k=th.dataset.sort;
+      if(k===cSortKey) cSortDir*=-1; else { cSortKey=k; cSortDir = (k==='coin'||k==='platform')?1:-1; }
+      renderCrypto();
+    });
+  });
+  renderCrypto();
+})();
+</script>
+
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>

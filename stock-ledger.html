@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>股票交易簿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#f4f2ec; --surface:#fbfaf7; --surface-2:#f0eee6;
+    --ink:#1c1b17; --ink-2:#57544c; --muted:#8a867a;
+    --hair:#e4e1d6; --hair-strong:#d3cfc1;
+    --accent:#0a8f7c; --accent-soft:#e0f0ec;
+    --c-buy:#0a8f7c; --c-sell:#e0692f;
+    --shadow:0 1px 2px rgba(28,27,23,.05), 0 8px 24px -12px rgba(28,27,23,.12);
+    --serif:"Fraunces", ui-serif, Georgia, "Songti TC", serif;
+    --sans:"IBM Plex Sans", "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+    --mono:"IBM Plex Mono", "PingFang TC", "Microsoft JhengHei", ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#121310; --surface:#1b1c18; --surface-2:#232420;
+      --ink:#f3f1e8; --ink-2:#b8b4a6; --muted:#86837a;
+      --hair:#2c2d27; --hair-strong:#3a3b33;
+      --accent:#26b39c; --accent-soft:#123029;
+      --c-buy:#1fa48f; --c-sell:#dd6636;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#121310; --surface:#1b1c18; --surface-2:#232420;
+    --ink:#f3f1e8; --ink-2:#b8b4a6; --muted:#86837a;
+    --hair:#2c2d27; --hair-strong:#3a3b33;
+    --accent:#26b39c; --accent-soft:#123029;
+    --c-buy:#1fa48f; --c-sell:#dd6636;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--bg); color:var(--ink); font-family:var(--sans);
+    line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+  .wrap{max-width:1100px; margin:0 auto; padding:clamp(20px,5vw,56px) clamp(16px,4vw,32px) 72px;}
+
+  header.top{display:flex; flex-wrap:wrap; gap:24px 40px; align-items:flex-end;
+    justify-content:space-between; padding-bottom:28px; border-bottom:1px solid var(--hair-strong);}
+  .eyebrow{font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); font-weight:600; margin:0 0 10px;}
+  h1{font-family:var(--serif); font-weight:500; font-size:clamp(26px,4vw,36px);
+    line-height:1.15; margin:0 0 8px; letter-spacing:-.01em; text-wrap:balance;}
+  .sub{margin:0; color:var(--ink-2); font-size:14.5px; max-width:52ch;}
+  .headline{text-align:right; flex-shrink:0;}
+  .headline .fig{font-family:var(--serif); font-weight:500; font-size:clamp(30px,5.5vw,46px);
+    line-height:1; color:var(--accent); letter-spacing:-.02em;}
+  .headline .cap{margin-top:8px; font-size:13px; color:var(--muted);}
+  .headline .cap b{color:var(--ink-2); font-weight:600; font-variant-numeric:tabular-nums;}
+
+  .theme-btn{position:fixed; top:14px; right:14px; z-index:20; border:1px solid var(--hair-strong);
+    background:var(--surface); color:var(--ink-2); border-radius:999px; padding:6px 12px;
+    font-family:var(--sans); font-size:12px; cursor:pointer; box-shadow:var(--shadow);}
+  .theme-btn:hover{color:var(--ink)}
+
+  section{margin-top:44px;}
+  .sec-head{display:flex; align-items:baseline; gap:12px; margin-bottom:16px; flex-wrap:wrap;}
+  h2{font-family:var(--serif); font-weight:500; font-size:20px; margin:0; letter-spacing:-.01em;}
+  .sec-head .note{font-size:12.5px; color:var(--muted);}
+
+  .card{background:var(--surface); border:1px solid var(--hair); border-radius:14px;
+    padding:22px; box-shadow:var(--shadow);}
+
+  /* ---------- tiles ---------- */
+  .tiles{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+  .tile{background:var(--surface); border:1px solid var(--hair); border-radius:12px;
+    padding:16px 18px; box-shadow:var(--shadow);}
+  .tile .k{font-size:12.5px; color:var(--ink-2); font-weight:600; display:flex; gap:7px; align-items:center;}
+  .tile .dot{width:8px; height:8px; border-radius:2px; flex:none;}
+  .tile .v{font-family:var(--mono); font-size:20px; font-weight:500; margin-top:10px; letter-spacing:-.01em;}
+  .tile .m{font-size:12px; color:var(--muted); margin-top:2px; font-variant-numeric:tabular-nums;}
+
+  /* ---------- monthly chart ---------- */
+  .legend{display:flex; gap:18px; margin-bottom:4px; font-size:12.5px; color:var(--ink-2); flex-wrap:wrap;}
+  .legend span{display:flex; align-items:center; gap:7px;}
+  .legend i{width:10px; height:10px; border-radius:3px;}
+  .mchart-scroll{overflow-x:auto; margin-top:16px;}
+  .trend{position:relative; height:220px; min-width:760px;}
+  .trend-grid{position:absolute; inset:0 0 30px 0; display:flex; flex-direction:column; justify-content:space-between;}
+  .trend-grid div{border-top:1px solid var(--hair); position:relative;}
+  .trend-grid div span{position:absolute; left:0; top:-8px; font-size:10px; color:var(--muted);
+    font-variant-numeric:tabular-nums; background:var(--surface); padding-right:6px;}
+  .tbars{position:absolute; inset:0 0 30px 42px; display:grid; grid-auto-flow:column; grid-auto-columns:1fr;
+    gap:5px; align-items:end;}
+  .tbar-col{display:flex; flex-direction:column; justify-content:flex-end; height:100%; cursor:pointer; position:relative;
+    min-width:16px;}
+  .tbar-col .stack{display:flex; flex-direction:column-reverse; width:100%;}
+  .seg{width:100%; min-height:0;}
+  .seg.buy{background:var(--c-buy); border-radius:2px 2px 0 0;}
+  .seg.sell{background:var(--c-sell); border-bottom:2px solid var(--surface);}
+  .tbar-col .mlab{position:absolute; top:calc(100% + 8px); left:0; right:0; text-align:center;
+    font-size:9px; color:var(--muted); writing-mode:vertical-rl; height:26px;}
+
+  .tip{position:fixed; z-index:30; background:var(--ink); color:var(--bg); border-radius:9px;
+    padding:10px 12px; font-size:12px; max-width:260px; pointer-events:none; opacity:0;
+    transition:opacity .1s; box-shadow:0 8px 24px -8px rgba(0,0,0,.4); line-height:1.5;}
+  .tip b{font-family:var(--mono); font-weight:500;}
+  .tip .row{display:flex; justify-content:space-between; gap:14px;}
+  .tip .h{font-weight:600; margin-bottom:4px;}
+  .tip .muted{color:var(--muted);}
+
+  /* ---------- highlight cards ---------- */
+  .hl-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px;}
+  .hl-card{border:1px solid var(--hair); border-left:3px solid var(--c-sell); border-radius:10px;
+    padding:14px 16px; background:var(--surface-2); font-size:12.5px; color:var(--ink-2); line-height:1.65;}
+  .hl-card.buy{border-left-color:var(--c-buy);}
+  .hl-card b{color:var(--ink); font-family:var(--serif); font-size:14.5px; font-weight:500; display:block; margin-bottom:5px;}
+
+  /* ---------- ranked list ---------- */
+  .rk-list{display:flex; flex-direction:column;}
+  .rk-row{display:grid; grid-template-columns:130px 1fr auto; gap:12px; align-items:center; padding:8px 0;
+    border-bottom:1px solid var(--hair); font-size:12.5px;}
+  .rk-row:last-child{border-bottom:none;}
+  .rk-row .nm{color:var(--ink); font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .rk-row .bt{height:8px; border-radius:3px; background:var(--surface-2); overflow:hidden;}
+  .rk-row .bt i{display:block; height:100%; background:var(--c-buy); border-radius:3px;}
+  .rk-row .vv{font-family:var(--mono); font-size:12px; color:var(--ink-2); text-align:right; white-space:nowrap;}
+
+  /* ---------- table ---------- */
+  .filters{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; align-items:center;}
+  .filters .grp{display:flex; gap:6px; background:var(--surface-2); padding:4px; border-radius:999px;}
+  .chip{border:none; background:transparent; color:var(--ink-2); font-family:var(--sans); font-size:12.5px;
+    padding:4px 12px; border-radius:999px; cursor:pointer; white-space:nowrap;}
+  .chip[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:var(--shadow); font-weight:600;}
+  .filters input[type=search]{border:1px solid var(--hair-strong); background:var(--surface); color:var(--ink);
+    border-radius:999px; padding:6px 14px; font-family:var(--sans); font-size:12.5px; width:150px;}
+  .filters .count{margin-left:auto; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;}
+
+  .tbl-scroll{overflow-x:auto; border:1px solid var(--hair); border-radius:12px; background:var(--surface);
+    box-shadow:var(--shadow); max-height:560px; overflow-y:auto;}
+  table{border-collapse:collapse; width:100%; min-width:760px; font-size:13px;}
+  thead th{position:sticky; top:0; background:var(--surface); text-align:left; font-weight:600;
+    color:var(--ink-2); padding:11px 14px; border-bottom:1px solid var(--hair-strong);
+    cursor:pointer; white-space:nowrap; user-select:none; font-size:12px; letter-spacing:.02em; z-index:1;}
+  thead th .ar{color:var(--muted); font-size:10px; margin-left:3px;}
+  thead th.num, td.num{text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums;}
+  tbody td{padding:9px 14px; border-bottom:1px solid var(--hair); color:var(--ink-2); vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover td{background:var(--surface-2);}
+  td.item{color:var(--ink); font-weight:500; white-space:nowrap;}
+  .pill{display:inline-block; white-space:nowrap; font-size:11px; padding:1px 8px; border-radius:999px;
+    font-weight:600; border:1px solid var(--hair-strong); color:var(--ink-2);}
+  .pill.buy{background:color-mix(in srgb, var(--c-buy) 15%, transparent); border-color:transparent; color:var(--c-buy);}
+  .pill.sell{background:color-mix(in srgb, var(--c-sell) 15%, transparent); border-color:transparent; color:var(--c-sell);}
+  .pill.na{color:var(--muted); font-weight:500;}
+  td.note{color:var(--muted); font-size:11.5px;}
+
+  footer{margin-top:44px; padding-top:18px; border-top:1px solid var(--hair);
+    font-size:11.5px; color:var(--muted); line-height:1.7;}
+  footer code{font-family:var(--mono); color:var(--ink-2);}
+
+  /* ---------- mobile month picker (replaces wide chart on small screens) ---------- */
+  .mobile-trend{display:none;}
+  .mv-picker{display:flex; align-items:center; gap:10px; margin-top:16px;}
+  .mv-picker button{width:36px; height:36px; flex:none; border:1px solid var(--hair-strong);
+    background:var(--surface); color:var(--ink-2); border-radius:10px; font-size:16px; cursor:pointer;}
+  .mv-picker button:hover{color:var(--ink); border-color:var(--ink-2);}
+  .mv-picker select{flex:1; border:1px solid var(--hair-strong); background:var(--surface); color:var(--ink);
+    border-radius:10px; padding:9px 12px; font-family:var(--sans); font-size:14px; font-variant-numeric:tabular-nums;}
+  .mv-card{margin-top:16px; padding-top:16px; border-top:1px solid var(--hair);}
+  .mv-total{font-family:var(--serif); font-size:19px; color:var(--ink); margin-bottom:4px;}
+  .mv-total b{color:var(--accent); font-weight:600;}
+  .mv-sub{font-size:12px; color:var(--muted); margin-bottom:14px;}
+  .mv-row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0;
+    font-size:13px; border-bottom:1px solid var(--hair);}
+  .mv-row:last-child{border-bottom:none;}
+  .mv-row .nm{display:flex; align-items:center; gap:8px; color:var(--ink-2);}
+  .mv-row .nm i{width:8px; height:8px; border-radius:2px; flex:none;}
+  .mv-row .amt{font-family:var(--mono); color:var(--ink); font-weight:500; white-space:nowrap;}
+  .mv-list h4{margin:14px 0 6px; font-size:12px; font-weight:600; color:var(--ink-2);}
+  .mv-empty{font-size:12.5px; color:var(--muted); padding:8px 0;}
+
+  @media (max-width:720px){
+    header.top{flex-direction:column; align-items:flex-start;}
+    .headline{text-align:left;}
+    .tiles{grid-template-columns:1fr 1fr;}
+    .mchart-scroll{display:none;}
+    .mobile-trend{display:block;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+</style>
+<style>.pwa-back{position:fixed;top:14px;left:14px;z-index:20;border:1px solid var(--hair-strong,#d3cfc1);
+  background:var(--surface,#fbfaf7);color:var(--ink-2,#57544c);border-radius:999px;padding:6px 13px;
+  font-family:var(--sans,sans-serif);font-size:12px;text-decoration:none;box-shadow:var(--shadow,0 1px 2px rgba(0,0,0,.1));}
+.pwa-back:hover{color:var(--ink,#1c1b17);}</style>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#f4f2ec">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="資產App">
+
+</head>
+<body>
+<a href="./index.html" class="pwa-back">← 返回首頁</a>
+
+
+<button class="theme-btn" id="themeBtn" type="button">◑ 主題</button>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">股票交易簿 · 本機交易紀錄</p>
+      <h1>股票交易簿</h1>
+      <p class="sub">Firstrade（美股）與國泰證券（台股）的逐筆買賣紀錄，2024/08 – 2026/08，共 150 筆。</p>
+    </div>
+    <div class="headline">
+      <div class="fig" id="figN">—</div>
+      <div class="cap">筆交易 · 買 <b id="figBuyN">—</b> · 賣 <b id="figSellN">—</b></div>
+    </div>
+  </header>
+
+  <section id="tiles-sec">
+    <div class="sec-head"><h2>交易總覽</h2><span class="note">金額換算為 TWD（美股用匯率 31.6167）</span></div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section id="trend">
+    <div class="sec-head"><h2>月度交易活動</h2><span class="note">22 個月，買入基底 vs 賣出事件</span></div>
+    <div class="card">
+      <div class="legend">
+        <span><i style="background:var(--c-buy)"></i>買入</span>
+        <span><i style="background:var(--c-sell)"></i>賣出</span>
+      </div>
+      <div class="mchart-scroll">
+        <div class="trend">
+          <div class="trend-grid" id="trendGrid"></div>
+          <div class="tbars" id="tbars"></div>
+        </div>
+      </div>
+
+      <div class="mobile-trend" id="mobileTrend">
+        <div class="mv-picker">
+          <button id="mvPrev" type="button" aria-label="上一月">‹</button>
+          <select id="mvSelect"></select>
+          <button id="mvNext" type="button" aria-label="下一月">›</button>
+        </div>
+        <div class="mv-card" id="mvCard"></div>
+      </div>
+      <div class="hl-grid" style="margin-top:24px">
+        <div class="hl-card"><b>2026/02/12：單日出清 16 檔個股</b>一次賣出 AMAT、CHD、GIS、HSY、JNJ、LULU、MSFT、NUE、O、PSA、SBUX、TGT、TSM、V、VRTX、XAR，合計收回 NT$662,286，同月起大量轉買 QQQ／VOO／XAR——看起來是把個股集中換成 ETF 的一次調整。</div>
+        <div class="hl-card buy"><b>2330：2026/08 起每個交易日買 1 股</b>8 月幾乎每個交易日都透過國泰證券買進台積電 1 股，共 31 筆，是明顯的定期定額策略，跟其他大額整股買進的美股 ETF 不同節奏。</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="top-holdings">
+    <div class="sec-head"><h2>買最多的標的</h2><span class="note">依累積買入金額（TWD）排序，Top 10</span></div>
+    <div class="card">
+      <div class="rk-list" id="rkList"></div>
+    </div>
+  </section>
+
+  <section id="realized">
+    <div class="sec-head"><h2>已實現交易（賣出）</h2><span class="note">18 筆賣出；部分標的缺早期買入紀錄，損益僅供參考</span></div>
+    <div class="tbl-scroll" style="max-height:none">
+      <table>
+        <thead><tr>
+          <th>日期</th><th>標的</th><th class="num">股數</th><th class="num">賣出價</th>
+          <th class="num">價金(原幣)</th><th class="num">已配對成本</th><th class="num">損益(原幣)</th><th>資料完整度</th>
+        </tr></thead>
+        <tbody id="realizedBody"></tbody>
+      </table>
+    </div>
+    <p class="note" style="margin-top:12px; font-size:12px; color:var(--muted)">完整度 &lt; 90% 代表這筆賣出對不到足夠的歷史買入紀錄（本交易簿最早只到 2024/08），損益金額不可靠，僅列出實際收到的價金。</p>
+  </section>
+
+  <section id="log">
+    <div class="sec-head"><h2>完整交易紀錄</h2><span class="note">點欄位標題排序；搜尋代號或公司名稱</span></div>
+    <div class="filters">
+      <div class="grp" data-filter="market">
+        <button class="chip" data-v="all" aria-pressed="true">全部</button>
+        <button class="chip" data-v="tw" aria-pressed="false">台股</button>
+        <button class="chip" data-v="us" aria-pressed="false">美股</button>
+      </div>
+      <div class="grp" data-filter="side">
+        <button class="chip" data-v="all" aria-pressed="true">買賣皆看</button>
+        <button class="chip" data-v="buy" aria-pressed="false">只看買</button>
+        <button class="chip" data-v="sell" aria-pressed="false">只看賣</button>
+      </div>
+      <input type="search" id="searchBox" placeholder="搜尋代號／公司名稱">
+      <span class="count" id="logCount"></span>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th data-sort="date">日期<span class="ar">▾</span></th>
+          <th data-sort="ticker">標的<span class="ar"></span></th>
+          <th data-sort="market">市場<span class="ar"></span></th>
+          <th data-sort="side">買/賣<span class="ar"></span></th>
+          <th data-sort="broker">券商<span class="ar"></span></th>
+          <th class="num" data-sort="shares">股數<span class="ar"></span></th>
+          <th class="num" data-sort="price">價格<span class="ar"></span></th>
+          <th class="num" data-sort="amount">金額(原幣)<span class="ar"></span></th>
+          <th class="num" data-sort="amountTwd">金額(TWD)<span class="ar"></span></th>
+        </tr></thead>
+        <tbody id="logBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    資料來源：本機「股票交易簿」應用程式的 <code>transactions.json</code>（逐筆解析自 Firstrade 對帳單與國泰證券交易明細），非 Google 試算表；與「投資組合總覽」儀表板來源不同，兩者數字不必然完全一致。<br>
+    金額換算：美股原幣 USD，按固定匯率 <code>31.6167</code> 折算 TWD 僅供本頁排序比較用，非入帳當日實際匯率。<br>
+    「ONDAS-HOLDIN」與「ONDS」為同一檔股票（Ondas Holdings）在不同對帳單上的代號寫法，本頁已合併計算。<br>
+    已實現損益採 FIFO（先進先出）配對买入成本；本交易簿最早僅到 2024/08，早於此的買入未被記錄，因此賣出數量若超過可配對的買入數量，缺口部分不計入損益，僅計入完整配對的部分——詳見上方「資料完整度」欄位。
+  </footer>
+</div>
+
+<div class="tip" id="tip"></div>
+
+<script>const DATA = {"months":["2024-08","2024-09","2024-10","2024-11","2024-12","2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-06","2026-07","2026-08"],"monthly":{"2024-08":{"buy":88968.77,"sell":0.0,"buyN":8,"sellN":0},"2024-09":{"buy":11040.55,"sell":0.0,"buyN":1,"sellN":0},"2024-10":{"buy":41051.13,"sell":0.0,"buyN":3,"sellN":0},"2024-11":{"buy":23677.74,"sell":0.0,"buyN":2,"sellN":0},"2024-12":{"buy":83586.01,"sell":0.0,"buyN":7,"sellN":0},"2025-01":{"buy":100522.14,"sell":0.0,"buyN":9,"sellN":0},"2025-02":{"buy":50845.02,"sell":0.0,"buyN":5,"sellN":0},"2025-03":{"buy":113377.81,"sell":0.0,"buyN":8,"sellN":0},"2025-04":{"buy":259685.98,"sell":0.0,"buyN":25,"sellN":0},"2025-05":{"buy":4857.27,"sell":0.0,"buyN":1,"sellN":0},"2025-06":{"buy":68124.5,"sell":0.0,"buyN":2,"sellN":0},"2025-08":{"buy":36098.37,"sell":0.0,"buyN":2,"sellN":0},"2025-09":{"buy":73358.33,"sell":0.0,"buyN":2,"sellN":0},"2025-10":{"buy":76986.66,"sell":0.0,"buyN":2,"sellN":0},"2025-11":{"buy":412352.9,"sell":0.0,"buyN":3,"sellN":0},"2025-12":{"buy":14290.75,"sell":0.0,"buyN":1,"sellN":0},"2026-01":{"buy":39520.88,"sell":0.0,"buyN":1,"sellN":0},"2026-02":{"buy":248823.43,"sell":662286.08,"buyN":3,"sellN":17},"2026-03":{"buy":1262617.65,"sell":38256.21,"buyN":10,"sellN":1},"2026-06":{"buy":88526.76,"sell":0.0,"buyN":1,"sellN":0},"2026-07":{"buy":136073.86,"sell":0.0,"buyN":5,"sellN":0},"2026-08":{"buy":74134.0,"sell":0.0,"buyN":31,"sellN":0}},"buyTotal":3308521,"sellTotal":700542,"feeTotal":31.0,"topByAmt":[{"ticker":"QQQ","name":"INVESCO QQQ TR","market":"us","amt":1652034,"n":27},{"ticker":"VOO","name":"VANGUARD S&P 500 ETF","market":"us","amt":731412,"n":19},{"ticker":"XAR","name":"SPDR SERIES TRUST","market":"us","amt":368766,"n":8},{"ticker":"ONDS","name":"ONDAS INC","market":"us","amt":99593,"n":3},{"ticker":"MSFT","name":"MICROSOFT CORP","market":"us","amt":83519,"n":6},{"ticker":"2330","name":"台積電","market":"tw","amt":74134,"n":31},{"ticker":"O","name":"REALTY INCOME CORP","market":"us","amt":70837,"n":4},{"ticker":"PSA","name":"PUBLIC STORAGE","market":"us","amt":56600,"n":6},{"ticker":"AMAT","name":"APPLIED MATERIALS INC","market":"us","amt":36985,"n":6},{"ticker":"HSY","name":"HERSHEY COMPANY (THE)","market":"us","amt":35161,"n":6}],"feb12":{"n":17,"proceedsTwd":662286,"tickers":["AMAT","CHD","GIS","HSY","JNJ","LULU","MSFT","NUE","O","PSA","SBUX","TGT","TSM","V","VRTX","XAR"]},"realized":[{"date":"2026-02-12","ticker":"AMAT","market":"us","shares":7.0,"sellPrice":338.8,"proceeds":2371.6,"cost":1169.8,"realized":1201.8,"matchPct":100.0},{"date":"2026-02-12","ticker":"AMAT","market":"us","shares":0.0505,"sellPrice":338.8,"proceeds":17.13,"cost":0.0,"realized":17.13,"matchPct":0.0},{"date":"2026-02-12","ticker":"CHD","market":"us","shares":2.0206,"sellPrice":98.95,"proceeds":199.94,"cost":198.0,"realized":1.94,"matchPct":99.0},{"date":"2026-02-12","ticker":"GIS","market":"us","shares":5.2439,"sellPrice":48.8,"proceeds":255.9,"cost":0.0,"realized":255.9,"matchPct":0.0},{"date":"2026-02-12","ticker":"HSY","market":"us","shares":8.1724,"sellPrice":229.0,"proceeds":1871.49,"cost":1112.11,"realized":759.38,"matchPct":85.7},{"date":"2026-02-12","ticker":"JNJ","market":"us","shares":12.3507,"sellPrice":239.34,"proceeds":2956.01,"cost":295.55,"realized":2660.46,"matchPct":16.2},{"date":"2026-02-12","ticker":"LULU","market":"us","shares":5.0,"sellPrice":181.0,"proceeds":905.0,"cost":762.75,"realized":142.25,"matchPct":60.0},{"date":"2026-02-12","ticker":"MSFT","market":"us","shares":7.0342,"sellPrice":416.2,"proceeds":2927.61,"cost":2641.62,"realized":285.99,"matchPct":99.5},{"date":"2026-02-12","ticker":"NUE","market":"us","shares":5.0475,"sellPrice":194.36,"proceeds":981.02,"cost":666.06,"realized":314.96,"matchPct":99.1},{"date":"2026-02-12","ticker":"O","market":"us","shares":41.6344,"sellPrice":64.08,"proceeds":2667.93,"cost":2240.5,"realized":427.43,"matchPct":96.1},{"date":"2026-02-12","ticker":"PSA","market":"us","shares":6.2004,"sellPrice":292.3,"proceeds":1812.37,"cost":1790.18,"realized":22.19,"matchPct":96.8},{"date":"2026-02-12","ticker":"SBUX","market":"us","shares":10.2736,"sellPrice":97.74,"proceeds":1004.15,"cost":0.0,"realized":1004.15,"matchPct":0.0},{"date":"2026-02-12","ticker":"TGT","market":"us","shares":4.1395,"sellPrice":112.94,"proceeds":467.52,"cost":228.88,"realized":238.64,"matchPct":48.3},{"date":"2026-02-12","ticker":"TSM","market":"us","shares":1.0068,"sellPrice":370.0,"proceeds":372.53,"cost":134.64,"realized":237.89,"matchPct":99.3},{"date":"2026-02-12","ticker":"V","market":"us","shares":2.015,"sellPrice":327.9,"proceeds":660.73,"cost":0.0,"realized":660.73,"matchPct":0.0},{"date":"2026-02-12","ticker":"VRTX","market":"us","shares":2.0,"sellPrice":463.5,"proceeds":927.0,"cost":860.53,"realized":66.47,"matchPct":100.0},{"date":"2026-02-12","ticker":"XAR","market":"us","shares":2.0006,"sellPrice":274.62,"proceeds":549.42,"cost":452.0,"realized":97.42,"matchPct":100.0},{"date":"2026-03-03","ticker":"ONDS","market":"us","shares":100.0,"sellPrice":12.1,"proceeds":1210.0,"cost":1250.0,"realized":-40.0,"matchPct":100.0}],"events":[{"date":"2026-08-31","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2386.62,"amount":2386.0,"amountTwd":2386.0,"fee":1.0,"tax":0},{"date":"2026-08-31","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2386.62,"amount":2386.0,"amountTwd":2386.0,"fee":1.0,"tax":0},{"date":"2026-08-31","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2386.62,"amount":2386.0,"amountTwd":2386.0,"fee":1.0,"tax":0},{"date":"2026-08-28","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2425.74,"amount":2425.0,"amountTwd":2425.0,"fee":1.0,"tax":0},{"date":"2026-08-27","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2425.6,"amount":2425.0,"amountTwd":2425.0,"fee":1.0,"tax":0},{"date":"2026-08-26","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2410.38,"amount":2410.0,"amountTwd":2410.0,"fee":1.0,"tax":0},{"date":"2026-08-25","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2371.39,"amount":2371.0,"amountTwd":2371.0,"fee":1.0,"tax":0},{"date":"2026-08-24","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2394.76,"amount":2394.0,"amountTwd":2394.0,"fee":1.0,"tax":0},{"date":"2026-08-24","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2394.76,"amount":2394.0,"amountTwd":2394.0,"fee":1.0,"tax":0},{"date":"2026-08-24","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2394.76,"amount":2394.0,"amountTwd":2394.0,"fee":1.0,"tax":0},{"date":"2026-08-21","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2397.54,"amount":2397.0,"amountTwd":2397.0,"fee":1.0,"tax":0},{"date":"2026-08-20","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2362.11,"amount":2362.0,"amountTwd":2362.0,"fee":1.0,"tax":0},{"date":"2026-08-19","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2350.39,"amount":2350.0,"amountTwd":2350.0,"fee":1.0,"tax":0},{"date":"2026-08-18","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2384.88,"amount":2384.0,"amountTwd":2384.0,"fee":1.0,"tax":0},{"date":"2026-08-17","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2407.2,"amount":2407.0,"amountTwd":2407.0,"fee":1.0,"tax":0},{"date":"2026-08-17","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2407.2,"amount":2407.0,"amountTwd":2407.0,"fee":1.0,"tax":0},{"date":"2026-08-17","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2407.2,"amount":2407.0,"amountTwd":2407.0,"fee":1.0,"tax":0},{"date":"2026-08-14","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2424.83,"amount":2424.0,"amountTwd":2424.0,"fee":1.0,"tax":0},{"date":"2026-08-13","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2432.99,"amount":2432.0,"amountTwd":2432.0,"fee":1.0,"tax":0},{"date":"2026-08-12","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2406.89,"amount":2406.0,"amountTwd":2406.0,"fee":1.0,"tax":0},{"date":"2026-08-11","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2394.07,"amount":2394.0,"amountTwd":2394.0,"fee":1.0,"tax":0},{"date":"2026-08-10","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2396.01,"amount":2396.0,"amountTwd":2396.0,"fee":1.0,"tax":0},{"date":"2026-08-10","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2396.01,"amount":2396.0,"amountTwd":2396.0,"fee":1.0,"tax":0},{"date":"2026-08-10","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2396.01,"amount":2396.0,"amountTwd":2396.0,"fee":1.0,"tax":0},{"date":"2026-08-07","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2372.28,"amount":2372.0,"amountTwd":2372.0,"fee":1.0,"tax":0},{"date":"2026-08-06","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2373.86,"amount":2373.0,"amountTwd":2373.0,"fee":1.0,"tax":0},{"date":"2026-08-05","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2401.06,"amount":2401.0,"amountTwd":2401.0,"fee":1.0,"tax":0},{"date":"2026-08-04","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2328.35,"amount":2328.0,"amountTwd":2328.0,"fee":1.0,"tax":0},{"date":"2026-08-03","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2377.61,"amount":2377.0,"amountTwd":2377.0,"fee":1.0,"tax":0},{"date":"2026-08-03","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2377.61,"amount":2377.0,"amountTwd":2377.0,"fee":1.0,"tax":0},{"date":"2026-08-03","broker":"國泰證券","market":"tw","ticker":"2330","name":"台積電","side":"buy","shares":1.0,"price":2377.61,"amount":2377.0,"amountTwd":2377.0,"fee":1.0,"tax":0},{"date":"2026-07-20","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":2.0,"price":690.0,"amount":1380.0,"amountTwd":43631.05,"fee":0,"tax":0},{"date":"2026-07-17","broker":"Firstrade","market":"us","ticker":"XAR","name":"SPDR SERIES TRUST","side":"buy","shares":2.0,"price":259.93,"amount":519.86,"amountTwd":16436.26,"fee":0,"tax":0},{"date":"2026-07-06","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":2.0,"price":715.0,"amount":1430.0,"amountTwd":45211.88,"fee":0,"tax":0},{"date":"2026-07-06","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":1.0,"price":686.0,"amount":686.0,"amountTwd":21689.06,"fee":0,"tax":0},{"date":"2026-07-06","broker":"Firstrade","market":"us","ticker":"XAR","name":"SPDR SERIES TRUST","side":"buy","shares":1.0,"price":288.0,"amount":288.0,"amountTwd":9105.61,"fee":0,"tax":0},{"date":"2026-06-11","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":4.0,"price":700.0,"amount":2800.0,"amountTwd":88526.76,"fee":0,"tax":0},{"date":"2026-03-30","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":10.0,"price":590.79,"amount":5907.9,"amountTwd":186788.3,"fee":0,"tax":0},{"date":"2026-03-30","broker":"Firstrade","market":"us","ticker":"XAR","name":"SPDR SERIES TRUST","side":"buy","shares":5.0,"price":255.0,"amount":1275.0,"amountTwd":40311.29,"fee":0,"tax":0},{"date":"2026-03-30","broker":"Firstrade","market":"us","ticker":"XAR","name":"SPDR SERIES TRUST","side":"buy","shares":10.0,"price":254.88,"amount":2548.8,"amountTwd":80584.64,"fee":0,"tax":0},{"date":"2026-03-25","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":5.0,"price":583.0,"amount":2915.0,"amountTwd":92162.68,"fee":0,"tax":0},{"date":"2026-03-25","broker":"Firstrade","market":"us","ticker":"XAR","name":"SPDR SERIES TRUST","side":"buy","shares":5.0,"price":260.0,"amount":1300.0,"amountTwd":41101.71,"fee":0,"tax":0},{"date":"2026-03-23","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":10.0,"price":583.0,"amount":5830.0,"amountTwd":184325.36,"fee":0,"tax":0},{"date":"2026-03-23","broker":"Firstrade","market":"us","ticker":"XAR","name":"SPDR SERIES TRUST","side":"buy","shares":10.0,"price":260.0,"amount":2600.0,"amountTwd":82203.42,"fee":0,"tax":0},{"date":"2026-03-20","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":10.0,"price":589.3,"amount":5893.0,"amountTwd":186317.21,"fee":0,"tax":0},{"date":"2026-03-16","broker":"Firstrade","market":"us","ticker":"XAR","name":"SPDR SERIES TRUST","side":"buy","shares":10.0,"price":268.0,"amount":2680.0,"amountTwd":84732.76,"fee":0,"tax":0},{"date":"2026-03-03","broker":"Firstrade","market":"us","ticker":"ONDS","name":"ONDAS INC","side":"sell","shares":100.0,"price":12.1,"amount":1210.0,"amountTwd":38256.21,"fee":0,"tax":0},{"date":"2026-03-03","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":15.0,"price":599.03,"amount":8985.45,"amountTwd":284090.28,"fee":0,"tax":0},{"date":"2026-02-17","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":10.0,"price":597.0,"amount":5970.0,"amountTwd":188751.7,"fee":0,"tax":0},{"date":"2026-02-12","broker":"Firstrade","market":"us","ticker":"AMAT","name":"APPLIED MATERIALS INC","side":"sell","shares":7.0,"price":338.8,"amount":2371.6,"amountTwd":74982.17,"fee":0,"tax":0},{"date":"2026-02-12","broker":"Firstrade","market":"us","ticker":"AMAT","name":"APPLIED MATERIALS INC","side":"sell","shares":0.05055,"price":338.8,"amount":17.13,"amountTwd":541.59,"fee":0,"tax":0},{"date":"2026-02-12","broker":"Firstrade","market":"us","ticker":"CHD","name":"CHURCH & DWIGHT CO INC","side":"sell","shares":2.02065,"price":98.95,"amount":199.94,"amountTwd":6321.44,"fee":0,"tax":0},{"date":"2026-02-12","broker":"Firstrade","market":"us","ticker":"GIS","name":"GENERAL MILLS INC","side":"sell","shares":5.24392,"price":48.8,"amount":255.9,"amountTwd":8090.71,"fee":0,"tax":0},{"date":"2026-02-12","broker":"Firstrade","market":"us","ticker":"HSY","name":"HERSHEY COMPANY (THE)","side":"sell","shares":8.17245,"price":229.0,"amount":1871.49,"amountTwd":59170.34,"fee":0,"tax":0},{"date":"2026-02-12","broker":"Firstrade","market":"us","ticker":"JNJ","name":"JOHNSON & JOHNSON","side":"sell","shares":12.35066,"price":239.34,"amount":2956.01,"amountTwd":93459.28,"fee":0,"tax":0},{"date":"2026-02-12","broker":"Firstrade","market":"us","ticker":"LULU","name":"LULULEMON ATHLETICA INC","side":"sell","shares":5.0,"price":181.0,"amount":905.0,"amountTwd":28613.11,"fee":0,"tax":0},{"date":"2026-02-12","broker":"Firstrade","market":"us","ticker":"MSFT","name":"MICROSOFT CORP","side":"sell","shares":7.03415,"price":416.2,"amount":2927.61,"amountTwd":92561.37,"fee":0,"tax":0},{"date":"2026-02-12","broker":"Firstrade","market":"us","ticker":"NUE","name":"NUCOR CORP","side":"sell","shares":5.04745,"price":194.36,"amount":981.02,"amountTwd":31016.62,"fee":0,"tax":0},{"date":"2026-02-12","broker":"Firstrade","market":"us","ticker":"O","name":"REALTY INCOME CORP","side":"sell","shares":41.63443,"price":64.08,"amount":2667.93,"amountTwd":84351.14,"fee":0,"tax":0},{"date":"2026-02-12","broker":"Firstrade","market":"us","ticker":"PSA","name":"PUBLIC STORAGE","side":"sell","shares":6.20036,"price":292.3,"amount":1812.37,"amountTwd":57301.16,"fee":0,"tax":0},{"date":"2026-02-12","broker":"Firstrade","market":"us","ticker":"SBUX","name":"STARBUCKS CORP","side":"sell","shares":10.27364,"price":97.74,"amount":1004.15,"amountTwd":31747.91,"fee":0,"tax":0},{"date":"2026-02-12","broker":"Firstrade","market":"us","ticker":"TGT","name":"TARGET CORP","side":"sell","shares":4.13953,"price":112.94,"amount":467.52,"amountTwd":14781.44,"fee":0,"tax":0},{"date":"2026-02-12","broker":"Firstrade","market":"us","ticker":"TSM","name":"TAIWAN SEMICONDUCTOR MFG CO","side":"sell","shares":1.00684,"price":370.0,"amount":372.53,"amountTwd":11778.17,"fee":0,"tax":0},{"date":"2026-02-12","broker":"Firstrade","market":"us","ticker":"V","name":"VISA INC","side":"sell","shares":2.01502,"price":327.9,"amount":660.73,"amountTwd":20890.1,"fee":0,"tax":0},{"date":"2026-02-12","broker":"Firstrade","market":"us","ticker":"VRTX","name":"VERTEX PHARMACEUTICALS INC","side":"sell","shares":2.0,"price":463.5,"amount":927.0,"amountTwd":29308.68,"fee":0,"tax":0},{"date":"2026-02-12","broker":"Firstrade","market":"us","ticker":"XAR","name":"SPDR SERIES TRUST","side":"sell","shares":2.00064,"price":274.62,"amount":549.42,"amountTwd":17370.85,"fee":0,"tax":0},{"date":"2026-02-06","broker":"Firstrade","market":"us","ticker":"ONDS","name":"ONDAS INC","side":"buy","shares":100.0,"price":9.0,"amount":900.0,"amountTwd":28455.03,"fee":0,"tax":0},{"date":"2026-02-05","broker":"Firstrade","market":"us","ticker":"ONDS","name":"ONDAS INC","side":"buy","shares":100.0,"price":10.0,"amount":1000.0,"amountTwd":31616.7,"fee":0,"tax":0},{"date":"2026-01-20","broker":"Firstrade","market":"us","ticker":"ONDS","name":"ONDAS INC","side":"buy","shares":100.0,"price":12.5,"amount":1250.0,"amountTwd":39520.88,"fee":0,"tax":0},{"date":"2025-12-02","broker":"Firstrade","market":"us","ticker":"XAR","name":"SPDR SERIES TRUST","side":"buy","shares":2.0,"price":226.0,"amount":452.0,"amountTwd":14290.75,"fee":0,"tax":0},{"date":"2025-11-21","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":2.0,"price":586.5,"amount":1173.0,"amountTwd":37086.39,"fee":0,"tax":0},{"date":"2025-11-05","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":9.0,"price":623.25,"amount":5609.25,"amountTwd":177345.97,"fee":0,"tax":0},{"date":"2025-11-04","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":10.0,"price":626.0,"amount":6260.0,"amountTwd":197920.54,"fee":0,"tax":0},{"date":"2025-10-14","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":2.0,"price":602.5,"amount":1205.0,"amountTwd":38098.12,"fee":0,"tax":0},{"date":"2025-10-08","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":2.0,"price":615.0,"amount":1230.0,"amountTwd":38888.54,"fee":0,"tax":0},{"date":"2025-09-04","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":2.0,"price":569.25,"amount":1138.5,"amountTwd":35995.61,"fee":0,"tax":0},{"date":"2025-09-04","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":2.0,"price":590.87,"amount":1181.74,"amountTwd":37362.72,"fee":0,"tax":0},{"date":"2025-08-07","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":1.0,"price":562.6495,"amount":562.65,"amountTwd":17789.14,"fee":0,"tax":0},{"date":"2025-08-07","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":1.0,"price":579.1,"amount":579.1,"amountTwd":18309.23,"fee":0,"tax":0},{"date":"2025-06-16","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":2.0,"price":527.35,"amount":1054.7,"amountTwd":33346.13,"fee":0,"tax":0},{"date":"2025-06-16","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":2.0,"price":550.0,"amount":1100.0,"amountTwd":34778.37,"fee":0,"tax":0},{"date":"2025-05-22","broker":"Firstrade","market":"us","ticker":"HSY","name":"HERSHEY COMPANY (THE)","side":"buy","shares":1.0,"price":153.63,"amount":153.63,"amountTwd":4857.27,"fee":0,"tax":0},{"date":"2025-04-10","broker":"Firstrade","market":"us","ticker":"JNJ","name":"JOHNSON & JOHNSON","side":"buy","shares":1.0,"price":142.55,"amount":142.55,"amountTwd":4506.96,"fee":0,"tax":0},{"date":"2025-04-10","broker":"Firstrade","market":"us","ticker":"O","name":"REALTY INCOME CORP","side":"buy","shares":10.0,"price":51.32,"amount":513.2,"amountTwd":16225.69,"fee":0,"tax":0},{"date":"2025-04-08","broker":"Firstrade","market":"us","ticker":"TSM","name":"TAIWAN SEMICONDUCTOR MFG CO","side":"buy","shares":1.0,"price":134.64,"amount":134.64,"amountTwd":4256.87,"fee":0,"tax":0},{"date":"2025-04-07","broker":"Firstrade","market":"us","ticker":"JNJ","name":"JOHNSON & JOHNSON","side":"buy","shares":1.0,"price":153.0,"amount":153.0,"amountTwd":4837.36,"fee":0,"tax":0},{"date":"2025-04-07","broker":"Firstrade","market":"us","ticker":"LULU","name":"LULULEMON ATHLETICA INC","side":"buy","shares":1.0,"price":235.0,"amount":235.0,"amountTwd":7429.92,"fee":0,"tax":0},{"date":"2025-04-07","broker":"Firstrade","market":"us","ticker":"MSFT","name":"MICROSOFT CORP","side":"buy","shares":1.0,"price":364.48,"amount":364.48,"amountTwd":11523.65,"fee":0,"tax":0},{"date":"2025-04-07","broker":"Firstrade","market":"us","ticker":"MSFT","name":"MICROSOFT CORP","side":"buy","shares":1.0,"price":364.48,"amount":364.48,"amountTwd":11523.65,"fee":0,"tax":0},{"date":"2025-04-07","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":1.0,"price":425.0,"amount":425.0,"amountTwd":13437.1,"fee":0,"tax":0},{"date":"2025-04-07","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":1.0,"price":438.12,"amount":438.12,"amountTwd":13851.91,"fee":0,"tax":0},{"date":"2025-04-07","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":1.0,"price":478.0,"amount":478.0,"amountTwd":15112.78,"fee":0,"tax":0},{"date":"2025-04-07","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":1.0,"price":465.0,"amount":465.0,"amountTwd":14701.77,"fee":0,"tax":0},{"date":"2025-04-04","broker":"Firstrade","market":"us","ticker":"LULU","name":"LULULEMON ATHLETICA INC","side":"buy","shares":1.0,"price":250.0,"amount":250.0,"amountTwd":7904.18,"fee":0,"tax":0},{"date":"2025-04-04","broker":"Firstrade","market":"us","ticker":"NUE","name":"NUCOR CORP","side":"buy","shares":1.0,"price":117.0,"amount":117.0,"amountTwd":3699.15,"fee":0,"tax":0},{"date":"2025-04-04","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":1.0,"price":499.0,"amount":499.0,"amountTwd":15776.73,"fee":0,"tax":0},{"date":"2025-04-03","broker":"Firstrade","market":"us","ticker":"LULU","name":"LULULEMON ATHLETICA INC","side":"buy","shares":1.0,"price":277.75,"amount":277.75,"amountTwd":8781.54,"fee":0,"tax":0},{"date":"2025-04-03","broker":"Firstrade","market":"us","ticker":"MSFT","name":"MICROSOFT CORP","side":"buy","shares":1.0,"price":378.0,"amount":378.0,"amountTwd":11951.11,"fee":0,"tax":0},{"date":"2025-04-03","broker":"Firstrade","market":"us","ticker":"NUE","name":"NUCOR CORP","side":"buy","shares":1.0,"price":118.06,"amount":118.06,"amountTwd":3732.67,"fee":0,"tax":0},{"date":"2025-04-03","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":1.0,"price":466.34,"amount":466.34,"amountTwd":14744.13,"fee":0,"tax":0},{"date":"2025-04-03","broker":"Firstrade","market":"us","ticker":"TGT","name":"TARGET CORP","side":"buy","shares":1.0,"price":104.0,"amount":104.0,"amountTwd":3288.14,"fee":0,"tax":0},{"date":"2025-04-03","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":1.0,"price":510.08,"amount":510.08,"amountTwd":16127.05,"fee":0,"tax":0},{"date":"2025-04-02","broker":"Firstrade","market":"us","ticker":"AMAT","name":"APPLIED MATERIALS INC","side":"buy","shares":1.0,"price":142.0,"amount":142.0,"amountTwd":4489.57,"fee":0,"tax":0},{"date":"2025-04-01","broker":"Firstrade","market":"us","ticker":"MSFT","name":"MICROSOFT CORP","side":"buy","shares":1.0,"price":372.56,"amount":372.56,"amountTwd":11779.12,"fee":0,"tax":0},{"date":"2025-04-01","broker":"Firstrade","market":"us","ticker":"PSA","name":"PUBLIC STORAGE","side":"buy","shares":1.0,"price":298.0,"amount":298.0,"amountTwd":9421.78,"fee":0,"tax":0},{"date":"2025-04-01","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":1.0,"price":461.92,"amount":461.92,"amountTwd":14604.39,"fee":0,"tax":0},{"date":"2025-04-01","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":1.0,"price":505.39,"amount":505.39,"amountTwd":15978.76,"fee":0,"tax":0},{"date":"2025-03-10","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":1.0,"price":487.16,"amount":487.16,"amountTwd":15402.39,"fee":0,"tax":0},{"date":"2025-03-05","broker":"Firstrade","market":"us","ticker":"MSFT","name":"MICROSOFT CORP","side":"buy","shares":1.0,"price":383.44,"amount":383.44,"amountTwd":12123.11,"fee":0,"tax":0},{"date":"2025-03-05","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":1.0,"price":494.18,"amount":494.18,"amountTwd":15624.34,"fee":0,"tax":0},{"date":"2025-03-05","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":1.0,"price":530.0,"amount":530.0,"amountTwd":16756.85,"fee":0,"tax":0},{"date":"2025-03-04","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":1.0,"price":495.0,"amount":495.0,"amountTwd":15650.27,"fee":0,"tax":0},{"date":"2025-03-03","broker":"Firstrade","market":"us","ticker":"AMAT","name":"APPLIED MATERIALS INC","side":"buy","shares":1.0,"price":157.85,"amount":157.85,"amountTwd":4990.7,"fee":0,"tax":0},{"date":"2025-03-03","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":1.0,"price":499.94,"amount":499.94,"amountTwd":15806.45,"fee":0,"tax":0},{"date":"2025-03-03","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":1.0,"price":538.44,"amount":538.44,"amountTwd":17023.7,"fee":0,"tax":0},{"date":"2025-02-26","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":1.0,"price":519.13,"amount":519.13,"amountTwd":16413.18,"fee":0,"tax":0},{"date":"2025-02-24","broker":"Firstrade","market":"us","ticker":"TGT","name":"TARGET CORP","side":"buy","shares":1.0,"price":124.88,"amount":124.88,"amountTwd":3948.29,"fee":0,"tax":0},{"date":"2025-02-19","broker":"Firstrade","market":"us","ticker":"PSA","name":"PUBLIC STORAGE","side":"buy","shares":1.0,"price":296.16,"amount":296.16,"amountTwd":9363.6,"fee":0,"tax":0},{"date":"2025-02-13","broker":"Firstrade","market":"us","ticker":"O","name":"REALTY INCOME CORP","side":"buy","shares":10.0,"price":53.5,"amount":535.0,"amountTwd":16914.93,"fee":0,"tax":0},{"date":"2025-02-07","broker":"Firstrade","market":"us","ticker":"NUE","name":"NUCOR CORP","side":"buy","shares":1.0,"price":133.0,"amount":133.0,"amountTwd":4205.02,"fee":0,"tax":0},{"date":"2025-01-31","broker":"Firstrade","market":"us","ticker":"HSY","name":"HERSHEY COMPANY (THE)","side":"buy","shares":2.0,"price":150.24,"amount":300.48,"amountTwd":9500.19,"fee":0,"tax":0},{"date":"2025-01-30","broker":"Firstrade","market":"us","ticker":"HSY","name":"HERSHEY COMPANY (THE)","side":"buy","shares":1.0,"price":150.3,"amount":150.3,"amountTwd":4751.99,"fee":0,"tax":0},{"date":"2025-01-30","broker":"Firstrade","market":"us","ticker":"PSA","name":"PUBLIC STORAGE","side":"buy","shares":1.0,"price":293.0,"amount":293.0,"amountTwd":9263.69,"fee":0,"tax":0},{"date":"2025-01-29","broker":"Firstrade","market":"us","ticker":"AMAT","name":"APPLIED MATERIALS INC","side":"buy","shares":1.0,"price":173.75,"amount":173.75,"amountTwd":5493.4,"fee":0,"tax":0},{"date":"2025-01-29","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":1.0,"price":514.4,"amount":514.4,"amountTwd":16263.63,"fee":0,"tax":0},{"date":"2025-01-29","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":1.0,"price":550.0,"amount":550.0,"amountTwd":17389.19,"fee":0,"tax":0},{"date":"2025-01-14","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":1.0,"price":501.2,"amount":501.2,"amountTwd":15846.29,"fee":0,"tax":0},{"date":"2025-01-14","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":1.0,"price":529.57,"amount":529.57,"amountTwd":16743.26,"fee":0,"tax":0},{"date":"2025-01-08","broker":"Firstrade","market":"us","ticker":"HSY","name":"HERSHEY COMPANY (THE)","side":"buy","shares":1.0,"price":166.7,"amount":166.7,"amountTwd":5270.5,"fee":0,"tax":0},{"date":"2024-12-26","broker":"Firstrade","market":"us","ticker":"HSY","name":"HERSHEY COMPANY (THE)","side":"buy","shares":1.0,"price":169.0,"amount":169.0,"amountTwd":5343.22,"fee":0,"tax":0},{"date":"2024-12-26","broker":"Firstrade","market":"us","ticker":"PSA","name":"PUBLIC STORAGE","side":"buy","shares":1.0,"price":297.2,"amount":297.2,"amountTwd":9396.48,"fee":0,"tax":0},{"date":"2024-12-26","broker":"Firstrade","market":"us","ticker":"VRTX","name":"VERTEX PHARMACEUTICALS INC","side":"buy","shares":1.0,"price":401.53,"amount":401.53,"amountTwd":12695.05,"fee":0,"tax":0},{"date":"2024-12-23","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":1.0,"price":536.0,"amount":536.0,"amountTwd":16946.55,"fee":0,"tax":0},{"date":"2024-12-19","broker":"Firstrade","market":"us","ticker":"HSY","name":"HERSHEY COMPANY (THE)","side":"buy","shares":1.0,"price":172.0,"amount":172.0,"amountTwd":5438.07,"fee":0,"tax":0},{"date":"2024-12-19","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":1.0,"price":518.0,"amount":518.0,"amountTwd":16377.45,"fee":0,"tax":0},{"date":"2024-12-19","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":1.0,"price":550.0,"amount":550.0,"amountTwd":17389.19,"fee":0,"tax":0},{"date":"2024-11-29","broker":"Firstrade","market":"us","ticker":"AMAT","name":"APPLIED MATERIALS INC","side":"buy","shares":1.0,"price":172.0,"amount":172.0,"amountTwd":5438.07,"fee":0,"tax":0},{"date":"2024-11-07","broker":"Firstrade","market":"us","ticker":"O","name":"REALTY INCOME CORP","side":"buy","shares":10.0,"price":57.69,"amount":576.9,"amountTwd":18239.67,"fee":0,"tax":0},{"date":"2024-10-09","broker":"Firstrade","market":"us","ticker":"CHD","name":"CHURCH & DWIGHT CO INC","side":"buy","shares":2.0,"price":99.0,"amount":198.0,"amountTwd":6260.11,"fee":0,"tax":0},{"date":"2024-10-07","broker":"Firstrade","market":"us","ticker":"O","name":"REALTY INCOME CORP","side":"buy","shares":10.0,"price":61.54,"amount":615.4,"amountTwd":19456.92,"fee":0,"tax":0},{"date":"2024-10-01","broker":"Firstrade","market":"us","ticker":"QQQ","name":"INVESCO QQQ TR","side":"buy","shares":1.0,"price":485.0,"amount":485.0,"amountTwd":15334.1,"fee":0,"tax":0},{"date":"2024-09-09","broker":"Firstrade","market":"us","ticker":"AMAT","name":"APPLIED MATERIALS INC","side":"buy","shares":2.0,"price":174.6,"amount":349.2,"amountTwd":11040.55,"fee":0,"tax":0},{"date":"2024-08-19","broker":"Firstrade","market":"us","ticker":"NUE","name":"NUCOR CORP","side":"buy","shares":1.0,"price":145.0,"amount":145.0,"amountTwd":4584.42,"fee":0,"tax":0},{"date":"2024-08-19","broker":"Firstrade","market":"us","ticker":"PSA","name":"PUBLIC STORAGE","side":"buy","shares":1.0,"price":316.57,"amount":316.57,"amountTwd":10008.9,"fee":0,"tax":0},{"date":"2024-08-14","broker":"Firstrade","market":"us","ticker":"VRTX","name":"VERTEX PHARMACEUTICALS INC","side":"buy","shares":1.0,"price":459.0,"amount":459.0,"amountTwd":14512.07,"fee":0,"tax":0},{"date":"2024-08-06","broker":"Firstrade","market":"us","ticker":"AMAT","name":"APPLIED MATERIALS INC","side":"buy","shares":1.0,"price":175.0,"amount":175.0,"amountTwd":5532.92,"fee":0,"tax":0},{"date":"2024-08-06","broker":"Firstrade","market":"us","ticker":"MSFT","name":"MICROSOFT CORP","side":"buy","shares":2.0,"price":389.33,"amount":778.66,"amountTwd":24618.66,"fee":0,"tax":0},{"date":"2024-08-05","broker":"Firstrade","market":"us","ticker":"NUE","name":"NUCOR CORP","side":"buy","shares":1.0,"price":153.0,"amount":153.0,"amountTwd":4837.36,"fee":0,"tax":0},{"date":"2024-08-02","broker":"Firstrade","market":"us","ticker":"VOO","name":"VANGUARD S&P 500 ETF","side":"buy","shares":1.0,"price":497.5,"amount":497.5,"amountTwd":15729.31,"fee":0,"tax":0},{"date":"2024-08-01","broker":"Firstrade","market":"us","ticker":"PSA","name":"PUBLIC STORAGE","side":"buy","shares":1.0,"price":289.25,"amount":289.25,"amountTwd":9145.13,"fee":0,"tax":0}],"totalN":150,"buyN":132,"sellN":18};</script>
+<script>
+(function(){
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+  const fmt2 = n => n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  document.getElementById('figN').textContent = DATA.totalN;
+  document.getElementById('figBuyN').textContent = DATA.buyN;
+  document.getElementById('figSellN').textContent = DATA.sellN;
+
+  /* ---- theme toggle ---- */
+  const root = document.documentElement, tb = document.getElementById('themeBtn');
+  tb.addEventListener('click', () => {
+    const cur = root.getAttribute('data-theme');
+    const sysDark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+    const next = cur ? (cur === 'dark' ? 'light' : 'dark') : (sysDark ? 'light' : 'dark');
+    root.setAttribute('data-theme', next);
+  });
+
+  /* ---- tiles ---- */
+  document.getElementById('tiles').innerHTML = `
+    <div class="tile"><div class="k"><span class="dot" style="background:var(--c-buy)"></span>買入總額</div>
+      <div class="v">NT$${fmt(DATA.buyTotal)}</div><div class="m">${DATA.buyN} 筆</div></div>
+    <div class="tile"><div class="k"><span class="dot" style="background:var(--c-sell)"></span>賣出總額</div>
+      <div class="v">NT$${fmt(DATA.sellTotal)}</div><div class="m">${DATA.sellN} 筆</div></div>
+    <div class="tile"><div class="k"><span class="dot" style="background:var(--accent)"></span>淨投入</div>
+      <div class="v">NT$${fmt(DATA.buyTotal-DATA.sellTotal)}</div><div class="m">買入 − 賣出</div></div>
+    <div class="tile"><div class="k"><span class="dot" style="background:var(--muted)"></span>手續費合計</div>
+      <div class="v">$${fmt2(DATA.feeTotal)}</div><div class="m">原幣，多數券商 0 手續費</div></div>`;
+
+  /* ---- monthly chart ---- */
+  const months = DATA.months;
+  const totals = months.map(m => DATA.monthly[m].buy + DATA.monthly[m].sell);
+  const maxV = Math.max(...totals);
+  const axisMax = Math.ceil(maxV/200000)*200000;
+  const grid = document.getElementById('trendGrid');
+  const steps=4;
+  grid.innerHTML = Array.from({length:steps+1},(_,i)=>{
+    const val = axisMax - i*(axisMax/steps);
+    return `<div><span>${val?fmt(val):'0'}</span></div>`;
+  }).join('');
+  const tbars = document.getElementById('tbars');
+  tbars.innerHTML = months.map(m => {
+    const mv = DATA.monthly[m];
+    const total = mv.buy+mv.sell;
+    const h = total/axisMax*100;
+    const buyH = mv.buy/total*100 || 0, sellH = mv.sell/total*100 || 0;
+    return `<div class="tbar-col" data-m="${m}">
+      <div class="stack" style="height:${h}%">
+        ${mv.sell>0?`<div class="seg sell" style="flex-basis:${sellH}%"></div>`:''}
+        <div class="seg buy" style="flex-basis:${buyH}%"></div>
+      </div>
+      <div class="mlab">${m}</div>
+    </div>`;
+  }).join('');
+
+  const tip = document.getElementById('tip');
+  function showTip(html,x,y){
+    tip.innerHTML=html; tip.style.opacity='1';
+    const r=tip.getBoundingClientRect();
+    let left=x+14, top=y-r.height-10;
+    if(left+r.width>window.innerWidth-8) left=x-r.width-14;
+    if(top<8) top=y+16;
+    tip.style.left=left+'px'; tip.style.top=top+'px';
+  }
+  const hideTip=()=>tip.style.opacity='0';
+  tbars.querySelectorAll('.tbar-col').forEach(col=>{
+    const m=col.dataset.m, mv=DATA.monthly[m];
+    const move=e=>showTip(
+      `<div class="h">${m}</div>
+       <div class="row"><span class="muted">買入</span><b>NT$${fmt(mv.buy)}（${mv.buyN}筆）</b></div>
+       ${mv.sell>0?`<div class="row"><span class="muted">賣出</span><b>NT$${fmt(mv.sell)}（${mv.sellN}筆）</b></div>`:''}`,
+      e.clientX, e.clientY);
+    col.addEventListener('mouseenter', move);
+    col.addEventListener('mousemove', move);
+    col.addEventListener('mouseleave', hideTip);
+  });
+
+  /* ---- mobile: month picker + detail card (replaces the wide chart on small screens) ---- */
+  (function(){
+    const sel = document.getElementById('mvSelect');
+    const mvCard = document.getElementById('mvCard');
+    const prevBtn = document.getElementById('mvPrev');
+    const nextBtn = document.getElementById('mvNext');
+
+    sel.innerHTML = months.map((m,i) => {
+      const mv = DATA.monthly[m];
+      const tag = mv.sell > 0 ? '（有賣出）' : '';
+      return `<option value="${i}">${m}${tag}</option>`;
+    }).join('');
+
+    function renderMonth(i){
+      i = Math.max(0, Math.min(months.length - 1, i));
+      sel.value = i;
+      const m = months[i], mv = DATA.monthly[m];
+      const total = mv.buy + mv.sell;
+      let html = `<div class="mv-total">${m} 交易 <b>NT$${fmt(total)}</b></div>`;
+      html += `<div class="mv-sub">買入 ${mv.buyN} 筆 · 賣出 ${mv.sellN} 筆</div>`;
+      html += `<div class="mv-row"><span class="nm"><i style="background:var(--c-buy)"></i>買入</span><span class="amt">NT$${fmt(mv.buy)}</span></div>`;
+      if (mv.sell > 0) html += `<div class="mv-row"><span class="nm"><i style="background:var(--c-sell)"></i>賣出</span><span class="amt">NT$${fmt(mv.sell)}</span></div>`;
+
+      const txns = DATA.events.filter(e => e.date.slice(0,7) === m).sort((a,b) => b.amountTwd - a.amountTwd);
+      if (txns.length){
+        html += `<div class="mv-list"><h4>當月交易（依金額排序，共 ${txns.length} 筆）</h4>`;
+        html += txns.slice(0,8).map(t => `<div class="mv-row">
+          <span class="nm"><i style="background:${t.side==='buy'?'var(--c-buy)':'var(--c-sell)'}"></i>${t.ticker}｜${t.side==='buy'?'買':'賣'}</span>
+          <span class="amt">NT$${fmt(t.amountTwd)}</span></div>`).join('');
+        if (txns.length > 8) html += `<div class="mv-empty">還有 ${txns.length-8} 筆，完整清單見下方「完整交易紀錄」。</div>`;
+        html += `</div>`;
+      }
+      mvCard.innerHTML = html;
+    }
+    sel.addEventListener('change', () => renderMonth(+sel.value));
+    prevBtn.addEventListener('click', () => renderMonth(+sel.value - 1));
+    nextBtn.addEventListener('click', () => renderMonth(+sel.value + 1));
+    renderMonth(months.length - 1); // default: most recent month
+  })();
+
+  /* ---- top holdings ---- */
+  const maxAmt = Math.max(...DATA.topByAmt.map(t=>t.amt));
+  document.getElementById('rkList').innerHTML = DATA.topByAmt.map(t => `
+    <div class="rk-row">
+      <span class="nm">${t.ticker}<span style="color:var(--muted);font-weight:400"> · ${t.market==='tw'?'台股':'美股'}</span></span>
+      <span class="bt"><i style="width:${Math.max(t.amt/maxAmt*100,2)}%"></i></span>
+      <span class="vv">NT$${fmt(t.amt)} · ${t.n}筆</span>
+    </div>`).join('');
+
+  /* ---- realized table ---- */
+  document.getElementById('realizedBody').innerHTML = DATA.realized.map(r => `
+    <tr>
+      <td class="item">${r.date}</td>
+      <td>${r.ticker}</td>
+      <td class="num">${r.shares}</td>
+      <td class="num">${r.market==='tw'?'NT$':'$'}${fmt2(r.sellPrice)}</td>
+      <td class="num">${r.market==='tw'?'NT$':'$'}${fmt2(r.proceeds)}</td>
+      <td class="num">${r.market==='tw'?'NT$':'$'}${fmt2(r.cost)}</td>
+      <td class="num">${r.matchPct>=90 ? (r.realized>=0?'+':'−')+ (r.market==='tw'?'NT$':'$')+fmt2(Math.abs(r.realized)) : '－'}</td>
+      <td><span class="pill ${r.matchPct>=90?'buy':'na'}">${r.matchPct}% 已配對</span></td>
+    </tr>`).join('');
+
+  /* ---- transaction log ---- */
+  const events = DATA.events;
+  let sortKey='date', sortDir=-1, fMarket='all', fSide='all', search='';
+  const logBody = document.getElementById('logBody');
+  function render(){
+    let view = events.filter(e =>
+      (fMarket==='all'||e.market===fMarket) &&
+      (fSide==='all'||e.side===fSide) &&
+      (search==='' || e.ticker.toLowerCase().includes(search) || e.name.toLowerCase().includes(search)));
+    view.sort((a,b)=>{
+      let x=a[sortKey], y=b[sortKey];
+      if(typeof x==='string') return sortDir*x.localeCompare(y);
+      return sortDir*((x||0)-(y||0));
+    });
+    document.getElementById('logCount').textContent = `${view.length} 筆`;
+    logBody.innerHTML = view.map(e => `
+      <tr>
+        <td class="item">${e.date}</td>
+        <td>${e.ticker}<br><span style="color:var(--muted);font-size:11px">${e.name}</span></td>
+        <td>${e.market==='tw'?'台股':'美股'}</td>
+        <td><span class="pill ${e.side}">${e.side==='buy'?'買':'賣'}</span></td>
+        <td>${e.broker}</td>
+        <td class="num">${e.shares}</td>
+        <td class="num">${e.market==='tw'?'NT$':'$'}${fmt2(e.price)}</td>
+        <td class="num">${e.market==='tw'?'NT$':'$'}${fmt2(e.amount)}</td>
+        <td class="num">${fmt(e.amountTwd)}</td>
+      </tr>`).join('');
+    document.querySelectorAll('#log thead th').forEach(th=>{
+      const ar=th.querySelector('.ar');
+      if(ar) ar.textContent = th.dataset.sort===sortKey ? (sortDir<0?'▾':'▴') : '';
+    });
+  }
+  document.querySelectorAll('#log thead th').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const k=th.dataset.sort;
+      if(k===sortKey) sortDir*=-1; else { sortKey=k; sortDir=(k==='ticker'||k==='market'||k==='side'||k==='broker')?1:-1; }
+      render();
+    });
+  });
+  document.querySelectorAll('#log .filters .grp').forEach(grp=>{
+    grp.addEventListener('click', e=>{
+      const btn=e.target.closest('.chip'); if(!btn) return;
+      if(grp.dataset.filter==='market') fMarket=btn.dataset.v; else fSide=btn.dataset.v;
+      grp.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed', c===btn));
+      render();
+    });
+  });
+  document.getElementById('searchBox').addEventListener('input', e=>{
+    search = e.target.value.trim().toLowerCase();
+    render();
+  });
+  render();
+})();
+</script>
+
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>

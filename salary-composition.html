@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>薪資組成拆解</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#f4f2ec; --surface:#fbfaf7; --surface-2:#f0eee6;
+    --ink:#1c1b17; --ink-2:#57544c; --muted:#8a867a;
+    --hair:#e4e1d6; --hair-strong:#d3cfc1;
+    --accent:#0a8f7c; --accent-soft:#e0f0ec;
+    --c-main:#0a8f7c; --c-myr:#2a78d6; --c-bonus:#e0692f;
+    --shadow:0 1px 2px rgba(28,27,23,.05), 0 8px 24px -12px rgba(28,27,23,.12);
+    --serif:"Fraunces", ui-serif, Georgia, "Songti TC", serif;
+    --sans:"IBM Plex Sans", "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+    --mono:"IBM Plex Mono", "PingFang TC", "Microsoft JhengHei", ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#121310; --surface:#1b1c18; --surface-2:#232420;
+      --ink:#f3f1e8; --ink-2:#b8b4a6; --muted:#86837a;
+      --hair:#2c2d27; --hair-strong:#3a3b33;
+      --accent:#26b39c; --accent-soft:#123029;
+      --c-main:#1fa48f; --c-myr:#3987e5; --c-bonus:#dd6636;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#121310; --surface:#1b1c18; --surface-2:#232420;
+    --ink:#f3f1e8; --ink-2:#b8b4a6; --muted:#86837a;
+    --hair:#2c2d27; --hair-strong:#3a3b33;
+    --accent:#26b39c; --accent-soft:#123029;
+    --c-main:#1fa48f; --c-myr:#3987e5; --c-bonus:#dd6636;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--bg); color:var(--ink); font-family:var(--sans);
+    line-height:1.55; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px; margin:0 auto; padding:clamp(20px,5vw,56px) clamp(16px,4vw,32px) 72px;}
+
+  header.top{padding-bottom:24px; border-bottom:1px solid var(--hair-strong);}
+  .eyebrow{font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); font-weight:600; margin:0 0 10px;}
+  h1{font-family:var(--serif); font-weight:500; font-size:clamp(26px,4vw,36px);
+    line-height:1.15; margin:0 0 8px; letter-spacing:-.01em; text-wrap:balance;}
+  .sub{margin:0; color:var(--ink-2); font-size:14.5px; max-width:60ch;}
+
+  .theme-btn{position:fixed; top:14px; right:14px; z-index:20; border:1px solid var(--hair-strong);
+    background:var(--surface); color:var(--ink-2); border-radius:999px; padding:6px 12px;
+    font-family:var(--sans); font-size:12px; cursor:pointer; box-shadow:var(--shadow);}
+  .theme-btn:hover{color:var(--ink)}
+
+  section{margin-top:44px;}
+  .sec-head{display:flex; align-items:baseline; gap:12px; margin-bottom:16px; flex-wrap:wrap;}
+  h2{font-family:var(--serif); font-weight:500; font-size:20px; margin:0; letter-spacing:-.01em;}
+  .sec-head .note{font-size:12.5px; color:var(--muted);}
+  .sec-tag{font-size:11px; padding:2px 10px; border-radius:999px; font-weight:600;}
+  .sec-tag.myr{background:color-mix(in srgb, var(--c-myr) 15%, transparent); color:var(--c-myr);}
+  .sec-tag.cny{background:var(--accent-soft); color:var(--accent);}
+
+  .card{background:var(--surface); border:1px solid var(--hair); border-radius:14px;
+    padding:22px; box-shadow:var(--shadow);}
+
+  /* ---------- MYR waterfall ---------- */
+  .wf-grid{display:grid; grid-template-columns:1.1fr 1fr; gap:28px;}
+  .wf-rows{display:flex; flex-direction:column;}
+  .wf-row{display:grid; grid-template-columns:1fr auto auto; gap:12px; align-items:center;
+    padding:9px 0; border-bottom:1px solid var(--hair); font-size:13px;}
+  .wf-row:last-child{border-bottom:none;}
+  .wf-row .lb{color:var(--ink-2);}
+  .wf-row .bar{width:140px; height:8px; border-radius:3px; background:var(--surface-2); overflow:hidden;}
+  .wf-row .bar i{display:block; height:100%; border-radius:3px;}
+  .wf-row .vv{font-family:var(--mono); font-variant-numeric:tabular-nums; text-align:right; min-width:78px;}
+  .wf-row.gross{font-weight:600;}
+  .wf-row.gross .lb, .wf-row.gross .vv{color:var(--ink);}
+  .wf-row.deduct .vv{color:var(--c-bonus);}
+  .wf-row.net{border-top:2px solid var(--hair-strong); margin-top:4px; padding-top:12px;}
+  .wf-row.net .lb, .wf-row.net .vv{color:var(--accent); font-weight:600; font-size:15px;}
+
+  .stab-box{display:flex; flex-direction:column; justify-content:center;}
+  .stab-box .big{font-family:var(--serif); font-size:15px; margin-bottom:10px;}
+  .mini-trend{position:relative; height:70px; display:grid; grid-template-columns:repeat(8,1fr);
+    gap:5px; align-items:end;}
+  .mini-trend .mcol{display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%;}
+  .mini-trend .mbar{width:70%; background:var(--c-myr); border-radius:2px 2px 0 0;}
+  .mini-trend .mlab{font-size:9px; color:var(--muted); margin-top:4px;}
+  .stab-note{font-size:12px; color:var(--ink-2); margin-top:12px; line-height:1.6;}
+
+  /* ---------- link insight ---------- */
+  .insight{display:flex; gap:14px; align-items:flex-start; background:var(--accent-soft);
+    border-radius:12px; padding:16px 18px; font-size:13px; color:var(--ink-2); line-height:1.65;}
+  .insight b{color:var(--ink);}
+
+  /* ---------- composition percentage ---------- */
+  .pct-split{display:flex; height:28px; border-radius:8px; overflow:hidden; gap:2px;}
+  .pct-split i{display:block; height:100%;}
+  .pct-legend{display:flex; gap:20px; margin:12px 0 22px; font-size:12.5px; color:var(--ink-2); flex-wrap:wrap;}
+  .pct-legend span{display:flex; align-items:center; gap:7px;}
+  .pct-legend i{width:10px; height:10px; border-radius:3px;}
+  .pct-legend b{font-family:var(--mono); color:var(--ink); margin-left:2px;}
+  .pct-list{display:flex; flex-direction:column;}
+  .pct-row{display:grid; grid-template-columns:150px 1fr auto; gap:14px; align-items:center;
+    padding:9px 0; border-bottom:1px solid var(--hair); font-size:13px;}
+  .pct-row:last-child{border-bottom:none;}
+  .pct-row .lb{color:var(--ink);}
+  .pct-row .bt{height:9px; border-radius:3px; background:var(--surface-2); overflow:hidden;}
+  .pct-row .bt i{display:block; height:100%; background:var(--accent); border-radius:3px;}
+  .pct-row .vv{font-family:var(--mono); font-size:12px; color:var(--ink-2); text-align:right; white-space:nowrap;}
+  .pct-row .vv b{color:var(--ink); font-weight:600;}
+  .pct-foot{font-size:12px; color:var(--muted); margin:16px 0 0; padding-top:14px;
+    border-top:1px solid var(--hair); line-height:1.6;}
+  .pct-foot b{color:var(--ink-2);}
+
+  /* ---------- CNY stacked chart ---------- */
+  .legend{display:flex; gap:18px; margin-bottom:4px; font-size:12.5px; color:var(--ink-2); flex-wrap:wrap;}
+  .legend span{display:flex; align-items:center; gap:7px;}
+  .legend i{width:10px; height:10px; border-radius:3px;}
+  .trend{position:relative; margin-top:16px; height:250px;}
+  .trend-grid{position:absolute; inset:0 0 26px 0; display:flex; flex-direction:column; justify-content:space-between;}
+  .trend-grid div{border-top:1px solid var(--hair); position:relative;}
+  .trend-grid div span{position:absolute; left:0; top:-8px; font-size:10.5px; color:var(--muted);
+    font-variant-numeric:tabular-nums; background:var(--surface); padding-right:6px;}
+  .tbars{position:absolute; inset:0 0 26px 50px; display:grid; grid-template-columns:repeat(8,1fr);
+    gap:clamp(8px,2vw,20px); align-items:end;}
+  .tbar-col{display:flex; flex-direction:column; justify-content:flex-end; height:100%; cursor:pointer; position:relative;}
+  .tbar-col .stack{display:flex; flex-direction:column-reverse; border-radius:5px 5px 0 0; overflow:hidden; width:100%; transition:filter .12s;}
+  .tbar-col:hover .stack{filter:brightness(1.07)}
+  .seg{width:100%;}
+  .seg.main{background:var(--c-main);}
+  .seg.myrA{background:var(--c-myr); border-bottom:2px solid var(--surface);}
+  .seg.myrB{background:var(--c-bonus); border-bottom:2px solid var(--surface);}
+  .tbar-col .val{position:absolute; top:-18px; left:50%; transform:translateX(-50%); font-size:10px;
+    color:var(--ink-2); font-family:var(--mono); white-space:nowrap; opacity:0; transition:opacity .12s;}
+  .tbar-col:hover .val, .tbar-col.peak .val{opacity:1;}
+  .tbar-col.peak .val{color:var(--c-bonus); font-weight:600;}
+  .tbar-col .mlab{position:absolute; top:calc(100% + 8px); left:0; right:0; text-align:center;
+    font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;}
+
+  .tip{position:fixed; z-index:30; background:var(--ink); color:var(--bg); border-radius:9px;
+    padding:10px 12px; font-size:12px; max-width:270px; pointer-events:none; opacity:0;
+    transition:opacity .1s; box-shadow:0 8px 24px -8px rgba(0,0,0,.4); line-height:1.5;}
+  .tip b{font-family:var(--mono); font-weight:500;}
+  .tip .row{display:flex; justify-content:space-between; gap:14px;}
+  .tip .h{font-weight:600; margin-bottom:4px;}
+  .tip .muted{color:var(--muted);}
+
+  .hl-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin-top:22px;}
+  .hl-card{border:1px solid var(--hair); border-left:3px solid var(--c-bonus); border-radius:10px;
+    padding:13px 15px; background:var(--surface-2); font-size:12.5px; color:var(--ink-2); line-height:1.6;}
+  .hl-card b{color:var(--ink); font-family:var(--serif); font-size:14px; font-weight:500; display:block; margin-bottom:4px;}
+
+  /* ---------- table ---------- */
+  .tbl-scroll{overflow-x:auto; border:1px solid var(--hair); border-radius:12px; background:var(--surface);
+    box-shadow:var(--shadow); margin-top:18px;}
+  table{border-collapse:collapse; width:100%; min-width:820px; font-size:12.5px;}
+  thead th{background:var(--surface); text-align:left; font-weight:600;
+    color:var(--ink-2); padding:11px 13px; border-bottom:1px solid var(--hair-strong);
+    white-space:nowrap; font-size:11.5px; letter-spacing:.02em;}
+  thead th.num, td.num{text-align:right;}
+  tbody td{padding:9px 13px; border-bottom:1px solid var(--hair); color:var(--ink-2); vertical-align:top;
+    font-family:var(--mono); font-variant-numeric:tabular-nums;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover td{background:var(--surface-2);}
+  td.m{font-family:var(--sans); color:var(--ink); font-weight:500;}
+  td.note{color:var(--muted); font-size:11px; max-width:260px; min-width:180px; font-family:var(--sans); white-space:normal;}
+  td.neg{color:var(--c-bonus);}
+
+  footer{margin-top:44px; padding-top:18px; border-top:1px solid var(--hair);
+    font-size:11.5px; color:var(--muted); line-height:1.7;}
+  footer code{font-family:var(--mono); color:var(--ink-2);}
+
+  @media (max-width:760px){
+    .wf-grid{grid-template-columns:1fr;}
+    .tbars{padding-left:38px;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+</style>
+<style>.pwa-back{position:fixed;top:14px;left:14px;z-index:20;border:1px solid var(--hair-strong,#d3cfc1);
+  background:var(--surface,#fbfaf7);color:var(--ink-2,#57544c);border-radius:999px;padding:6px 13px;
+  font-family:var(--sans,sans-serif);font-size:12px;text-decoration:none;box-shadow:var(--shadow,0 1px 2px rgba(0,0,0,.1));}
+.pwa-back:hover{color:var(--ink,#1c1b17);}</style>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#f4f2ec">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="資產App">
+
+</head>
+<body>
+<a href="./index.html" class="pwa-back">← 返回首頁</a>
+
+
+<button class="theme-btn" id="themeBtn" type="button">◑ 主題</button>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">資產 App · CNY／MYR 薪資明細分頁</p>
+    <h1>薪資組成拆解</h1>
+    <p class="sub">同一份工作，兩張薪資單：在地 MYR 薪資單純又穩定；主業 CNY 薪資單則有底薪、代扣、福利、獎勵好幾層，是「薪資收入總覽」裡主業金額忽高忽低的真正原因。</p>
+  </header>
+
+  <section id="myr">
+    <div class="sec-head"><span class="sec-tag myr">在地薪資</span><h2>MYR／CIMB 薪資單</h2><span class="note">每月幾乎一樣，是最穩的底盤</span></div>
+    <div class="card">
+      <div class="wf-grid">
+        <div class="wf-rows" id="wfRows"></div>
+        <div class="stab-box">
+          <div class="big">8 個月 NETT PAY 走勢</div>
+          <div class="mini-trend" id="miniTrend"></div>
+          <p class="stab-note" id="stabNote"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="link">
+    <div class="insight" id="insightCard"></div>
+  </section>
+
+  <section id="pct">
+    <div class="sec-head"><h2>8 個月薪資組成佔比</h2><span class="note">把兩張薪資單的每一筆項目攤開，看整包薪資裡底薪、獎金、津貼各佔多少</span></div>
+    <div class="card">
+      <div class="pct-split" id="pctSplit"></div>
+      <div class="pct-legend" id="pctLegend"></div>
+      <div class="pct-list" id="pctList"></div>
+      <p class="pct-foot" id="pctFoot"></p>
+    </div>
+  </section>
+
+  <section id="cny">
+    <div class="sec-head"><span class="sec-tag cny">主業薪資</span><h2>CNY 薪資單月度組成</h2><span class="note">換算成 CNY，看完整月度趨勢再細看每個月怎麼組成</span></div>
+    <div class="card">
+      <div class="legend">
+        <span><i style="background:var(--c-main)"></i>CNY 應發（底薪－代扣＋福利）</span>
+        <span><i style="background:var(--c-myr)"></i>MYR 補貼（折 CNY）</span>
+        <span><i style="background:var(--c-bonus)"></i>MYR 獎勵（折 CNY）</span>
+      </div>
+      <div class="trend">
+        <div class="trend-grid" id="trendGrid"></div>
+        <div class="tbars" id="tbars"></div>
+      </div>
+      <div class="hl-grid" id="hlGrid"></div>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th>薪資月份</th>
+          <th class="num">CNY 工資合計</th>
+          <th class="num">代扣</th>
+          <th class="num">福利</th>
+          <th class="num">CNY 應發</th>
+          <th class="num">MYR 補貼</th>
+          <th class="num">MYR 獎勵</th>
+          <th class="num">匯率</th>
+          <th class="num">換幣金額（CNY）</th>
+          <th>備註</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    資料來源：Google 試算表「CNY薪資明細」「MYR薪資明細」分頁，範圍 2026-01～08。<br>
+    CNY 應發＝CNY 工資合計＋CNY 扣款合計（代扣，含偶發的貸款還款等特殊扣款）＋CNY 福利合計；換幣金額（CNY）＝CNY 應發＋（MYR 補貼＋MYR 獎勵）× 薪資單當期 MYR/CNY 匯率。這筆換幣金額約 1 個月後以 USDT 入帳，對應「薪資收入總覽」裡的「主業薪資」——想看實際入帳月份與 TWD 金額，可切到那份儀表板對照。<br>
+    MYR／CIMB 薪資單為固定結構：基本薪資＋津貼－EPF／SOCSO／PCB（2026-06 起新增 SOCSO-SKBBK）＝NETT PAY，8 個月幾乎沒有波動。
+  </footer>
+</div>
+
+<div class="tip" id="tip"></div>
+
+<script>const DATA = {"cny":[{"month":"2026-01","wage":54688.0,"withhold":-16934.0,"deduction":-16934.0,"welfare":0.0,"netCny":37754,"allowMyr":7957.0,"bonusMyr":1500.0,"allowCny":14036,"bonusCny":2646,"rate":1.764,"total":54437,"note":"CNY應發 37,754；中文薪資單 MYR補貼 7,957 ＋ MYR獎勵 1,500 ＝ MYR合計 9,457；依薪資單 MYR/CNY 匯率合併後列示數字貨幣換幣金額 54,437 CNY。英文馬來西亞薪資另表。"},{"month":"2026-02","wage":80938.0,"withhold":-16913.0,"deduction":-16913.0,"welfare":0.0,"netCny":64025,"allowMyr":5737.0,"bonusMyr":2419.0,"allowCny":10107,"bonusCny":4262,"rate":1.7618,"total":78396,"note":"CNY應發 64,025；中文薪資單 MYR補貼 5,737 ＋ MYR獎勵 2,419 ＝ MYR合計 8,157；依薪資單 MYR/CNY 匯率合併後列示數字貨幣換幣金額 78,396 CNY。英文馬來西亞薪資另表。"},{"month":"2026-03","wage":54688.0,"withhold":-16437.0,"deduction":-32362.0,"welfare":74262.0,"netCny":96588,"allowMyr":5237.0,"bonusMyr":98613.0,"allowCny":8967,"bonusCny":168845,"rate":1.7122,"total":274401,"note":"CNY應發 96,588；中文薪資單 MYR補貼 5,237 ＋ MYR獎勵 98,613 ＝ MYR合計 103,850；依薪資單 MYR/CNY 匯率合併後列示數字貨幣換幣金額 274,401 CNY。英文馬來西亞薪資另表。"},{"month":"2026-04","wage":54688.0,"withhold":-16538.0,"deduction":-16814.0,"welfare":0.0,"netCny":37874,"allowMyr":5437.0,"bonusMyr":29776.0,"allowCny":9366,"bonusCny":51295,"rate":1.7227,"total":98536,"note":"CNY應發 37,874；中文薪資單 MYR補貼 5,437 ＋ MYR獎勵 29,776 ＝ MYR合計 35,213；依薪資單 MYR/CNY 匯率合併後列示數字貨幣換幣金額 98,536 CNY。英文馬來西亞薪資另表。"},{"month":"2026-05","wage":54688.0,"withhold":-16385.0,"deduction":-16385.0,"welfare":0.0,"netCny":38303,"allowMyr":5737.0,"bonusMyr":31047.0,"allowCny":9792,"bonusCny":52991,"rate":1.7068,"total":101086,"note":"CNY應發 38,303；中文薪資單 MYR補貼 5,737 ＋ MYR獎勵 31,047 ＝ MYR合計 36,784；依薪資單 MYR/CNY 匯率合併後列示數字貨幣換幣金額 101,086 CNY。英文馬來西亞薪資另表。"},{"month":"2026-06","wage":54688.0,"withhold":-16023.0,"deduction":-31023.0,"welfare":44541.0,"netCny":68206,"allowMyr":5182.0,"bonusMyr":30659.0,"allowCny":8649,"bonusCny":51173,"rate":1.6691,"total":128029,"note":"CNY應發 68,206；中文薪資單 MYR補貼 5,182 ＋ MYR獎勵 30,659 ＝ MYR合計 35,842；依薪資單 MYR/CNY 匯率合併後列示數字貨幣換幣金額 128,029 CNY。英文馬來西亞薪資另表。"},{"month":"2026-07","wage":20040.0,"withhold":-15839.0,"deduction":-15839.0,"welfare":0.0,"netCny":4201,"allowMyr":8182.0,"bonusMyr":786.0,"allowCny":13499,"bonusCny":1297,"rate":1.6499,"total":18998,"note":"CNY應發 4,201；中文薪資單 MYR補貼 8,182 ＋ MYR獎勵 786 ＝ MYR合計 8,968；依薪資單 MYR/CNY 匯率合併後列示數字貨幣換幣金額 18,998 CNY。CNY工資合計 20,040 已含補扣發 -34,648 CNY，該筆為公司借款第 1 期還款，折合 MYR 21,000；英文馬來西亞薪資另表。"},{"month":"2026-08","wage":19767.0,"withhold":-16015.0,"deduction":-16015.0,"welfare":0.0,"netCny":3752,"allowMyr":5182.0,"bonusMyr":32769.0,"allowCny":8645,"bonusCny":54665,"rate":1.6682,"total":67062,"note":"CNY 應發 3,752；MYR 補貼 5,182；MYR 獎勵 32,769；MYR 合計 37,951；依薪資單匯率計算數字貨幣換幣金額 67,062 CNY。此薪資單只證明應發／指定換幣金額，未將尚未見實際 USDT 入帳的金額提前列入收入總帳。"}],"myr":[{"month":"2026-01","base":8600,"allowance":1000,"gross":9600,"epf":178,"socso":29.75,"skbbk":0,"pcb":657.7,"totalDeduct":865.45,"nett":8734.55,"status":"一致"},{"month":"2026-02","base":8600,"allowance":1000,"gross":9600,"epf":178,"socso":29.75,"skbbk":0,"pcb":657.7,"totalDeduct":865.45,"nett":8734.55,"status":"一致"},{"month":"2026-03","base":8600,"allowance":1000,"gross":9600,"epf":178,"socso":29.75,"skbbk":0,"pcb":657.7,"totalDeduct":865.45,"nett":8734.55,"status":"一致"},{"month":"2026-04","base":8600,"allowance":1000,"gross":9600,"epf":178,"socso":29.75,"skbbk":0,"pcb":657.7,"totalDeduct":865.45,"nett":8734.55,"status":"一致"},{"month":"2026-05","base":8600,"allowance":1000,"gross":9600,"epf":178,"socso":29.75,"skbbk":0,"pcb":657.7,"totalDeduct":865.45,"nett":8734.55,"status":"一致"},{"month":"2026-06","base":8600,"allowance":1000,"gross":9600,"epf":178,"socso":29.75,"skbbk":44.65,"pcb":657.7,"totalDeduct":910.1,"nett":8689.9,"status":"一致"},{"month":"2026-07","base":8600,"allowance":1000,"gross":9600,"epf":178,"socso":29.75,"skbbk":44.65,"pcb":657.7,"totalDeduct":910.1,"nett":8689.9,"status":"待確認"},{"month":"2026-08","base":8600,"allowance":1000,"gross":9600,"epf":178,"socso":29.75,"skbbk":44.65,"pcb":657.65,"totalDeduct":910.05,"nett":8689.95,"status":"待確認"}],"myrAvgNett":8718,"myrCv":0.002,"cnyAvgTotal":102618,"cnyCv":0.7,"latestMyr":{"month":"2026-08","base":8600,"allowance":1000,"gross":9600,"epf":178,"socso":29.75,"skbbk":44.65,"pcb":657.65,"totalDeduct":910.05,"nett":8689.95,"status":"待確認"},"pct":{"grand":1153877,"buckets":[{"k":"底薪","v":463754,"pct":40.2},{"k":"績效獎勵","v":352938,"pct":30.6},{"k":"轉為在地薪資（MYR／CIMB）","v":131084,"pct":11.4},{"k":"獎金池","v":84303,"pct":7.3,"note":"已扣除獎金池扣款（清回）CNY -30,000，是實際拿到的季獎金淨額"},{"k":"其他津貼","v":42098,"pct":3.6},{"k":"住宿補貼","v":40964,"pct":3.6},{"k":"其他獎勵","v":34236,"pct":3.0},{"k":"其他福利／報銷","v":4500,"pct":0.4}],"adjustments":[{"k":"貸款還款等補扣發","v":-69569},{"k":"簽證費付","v":-1201}],"adjTotal":-70770}};</script>
+<script>
+(function(){
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+  const cny = DATA.cny, myr = DATA.myr;
+
+  /* ---- theme toggle ---- */
+  const root = document.documentElement, tb = document.getElementById('themeBtn');
+  tb.addEventListener('click', () => {
+    const cur = root.getAttribute('data-theme');
+    const sysDark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+    const next = cur ? (cur === 'dark' ? 'light' : 'dark') : (sysDark ? 'light' : 'dark');
+    root.setAttribute('data-theme', next);
+  });
+
+  /* ---- MYR waterfall (latest month as representative) ---- */
+  const L = DATA.latestMyr;
+  const maxBar = L.gross;
+  const rows = [
+    {lb:'基本薪資', v:L.base, cls:'main'},
+    {lb:'津貼合計', v:L.allowance, cls:'main'},
+    {lb:'毛收入合計', v:L.gross, cls:'gross', bold:true},
+    {lb:'EPF（員工）', v:-L.epf, cls:'deduct'},
+    {lb:'SOCSO（員工）', v:-L.socso, cls:'deduct'},
+    {lb:'SOCSO-SKBBK（員工）', v:-L.skbbk, cls:'deduct'},
+    {lb:'PCB（預扣所得稅）', v:-L.pcb, cls:'deduct'},
+    {lb:'NETT PAY（實領）', v:L.nett, cls:'net'},
+  ];
+  document.getElementById('wfRows').innerHTML = rows.map(r => {
+    const isGross = r.cls === 'gross', isNet = r.cls === 'net', isDeduct = r.cls === 'deduct';
+    const pct = Math.min(Math.abs(r.v) / maxBar * 100, 100);
+    const barColor = isDeduct ? 'var(--c-bonus)' : (isNet ? 'var(--accent)' : 'var(--c-myr)');
+    return `<div class="wf-row ${r.cls}">
+      <span class="lb">${r.lb}</span>
+      <span class="bar"><i style="width:${pct}%;background:${barColor}"></i></span>
+      <span class="vv">${r.v<0?'－':''}RM ${fmt(Math.abs(r.v))}</span>
+    </div>`;
+  }).join('');
+
+  /* ---- MYR mini trend ---- */
+  const maxN = Math.max(...myr.map(m => m.nett)), minN = Math.min(...myr.map(m => m.nett));
+  document.getElementById('miniTrend').innerHTML = myr.map(m => {
+    const h = 30 + (m.nett - minN) / Math.max(maxN - minN, 1) * 65;
+    return `<div class="mcol"><div class="mbar" style="height:${h}%" title="${m.month}：RM${fmt(m.nett)}"></div>
+      <span class="mlab">${m.month.slice(5)}</span></div>`;
+  }).join('');
+  document.getElementById('stabNote').textContent =
+    `月均 RM${fmt(DATA.myrAvgNett)}，變動係數只有 ${DATA.myrCv}——8 個月幾乎是同一個數字，6 月起因新增 SOCSO-SKBBK 扣項小降約 RM45。`;
+
+  /* ---- insight card ---- */
+  document.getElementById('insightCard').innerHTML =
+    `<span>🔗</span><span><b>這兩張薪資單其實是同一份工作。</b>CNY 薪資單上每月約 CNY 16,000～17,000 的「本地員工對公部分代扣」，換算回 MYR 後金額幾乎精準對上在地薪資單的毛收入 RM9,600——同一份聘僱關係，一部分透過中國主體用 USDT 發放（主業薪資），一部分透過馬來西亞當地主體走 CIMB 銀行帳戶發放（在地薪資），兩邊分開報稅／入帳，本質上不是兩份收入。</span>`;
+
+  /* ---- composition percentage ---- */
+  (function(){
+    const P = DATA.pct;
+    const groupOf = k => (k === '底薪') ? 'base'
+      : (['績效獎勵','獎金池','其他獎勵','其他福利／報銷'].includes(k)) ? 'bonus'
+      : 'allowance';
+    const groupMeta = {
+      base:{label:'底薪', color:'var(--c-main)'},
+      bonus:{label:'獎金與福利', color:'var(--c-bonus)'},
+      allowance:{label:'津貼與轉付（含在地薪資）', color:'var(--c-myr)'},
+    };
+    const groupTotals = {base:0, bonus:0, allowance:0};
+    P.buckets.forEach(b => { groupTotals[groupOf(b.k)] += b.v; });
+
+    document.getElementById('pctSplit').innerHTML = Object.entries(groupTotals).map(([g,v]) =>
+      `<i style="width:${v/P.grand*100}%;background:${groupMeta[g].color}"></i>`).join('');
+    document.getElementById('pctLegend').innerHTML = Object.entries(groupTotals).map(([g,v]) =>
+      `<span><i style="background:${groupMeta[g].color}"></i>${groupMeta[g].label}<b>${Math.round(v/P.grand*1000)/10}%</b></span>`).join('');
+
+    const maxB = Math.max(...P.buckets.map(b => b.v));
+    document.getElementById('pctList').innerHTML = P.buckets.map(b => `
+      <div class="pct-row">
+        <span class="lb">${b.k}${b.note ? `<br><span style="font-size:11px;color:var(--muted);font-weight:400">${b.note}</span>` : ''}</span>
+        <span class="bt"><i style="width:${Math.max(b.v/maxB*100,2)}%;background:${groupMeta[groupOf(b.k)].color}"></i></span>
+        <span class="vv">CNY ${fmt(b.v)} · <b>${b.pct}%</b></span>
+      </div>`).join('');
+
+    const adjLines = P.adjustments.map(a => `${a.k} ${fmt(a.v)}`).join('、');
+    document.getElementById('pctFoot').innerHTML =
+      `百分比以 8 個月「稅前毛額」CNY ${fmt(P.grand)} 為分母，不含以下已直接在薪資單扣除的特殊項目（合計 CNY ${fmt(P.adjTotal)}，不算進佔比）：<b>${adjLines}</b>。`;
+  })();
+
+  /* ---- CNY stacked trend ---- */
+  const totals = cny.map(c => c.total);
+  const maxV = Math.max(...totals);
+  const axisMax = Math.ceil(maxV / 50000) * 50000;
+  const peakI = totals.indexOf(maxV);
+  const grid = document.getElementById('trendGrid');
+  const steps = 4;
+  grid.innerHTML = Array.from({length: steps+1}, (_,i) => {
+    const val = axisMax - i*(axisMax/steps);
+    return `<div><span>${val ? fmt(val) : '0'}</span></div>`;
+  }).join('');
+
+  const tbars = document.getElementById('tbars');
+  tbars.innerHTML = cny.map((c,i) => {
+    const total = c.total;
+    const segs = [
+      {v:c.netCny, cls:'main'},
+      {v:c.allowCny, cls:'myrA'},
+      {v:c.bonusCny, cls:'myrB'},
+    ].filter(s => s.v > 0);
+    const stackH = total / axisMax * 100;
+    const isPeak = i === peakI;
+    return `<div class="tbar-col${isPeak?' peak':''}" data-i="${i}">
+      <div class="val">CNY ${fmt(total)}</div>
+      <div class="stack" style="height:${stackH}%">
+        ${segs.map(s => `<div class="seg ${s.cls}" style="flex-basis:${s.v/total*100}%"></div>`).join('')}
+      </div>
+      <div class="mlab">${c.month.slice(5)}月</div>
+    </div>`;
+  }).join('');
+
+  const tip = document.getElementById('tip');
+  function showTip(html, x, y){
+    tip.innerHTML = html; tip.style.opacity = '1';
+    const r = tip.getBoundingClientRect();
+    let left = x + 14, top = y - r.height - 10;
+    if (left + r.width > window.innerWidth - 8) left = x - r.width - 14;
+    if (top < 8) top = y + 16;
+    tip.style.left = left + 'px'; tip.style.top = top + 'px';
+  }
+  const hideTip = () => tip.style.opacity = '0';
+  tbars.querySelectorAll('.tbar-col').forEach(col => {
+    const i = +col.dataset.i, c = cny[i];
+    const move = e => showTip(
+      `<div class="h">${c.month}</div>
+       <div class="row"><span class="muted">CNY 工資合計</span><b>${fmt(c.wage)}</b></div>
+       <div class="row"><span class="muted">代扣</span><b>${fmt(c.deduction)}</b></div>
+       ${c.welfare>0?`<div class="row"><span class="muted">福利</span><b>+${fmt(c.welfare)}</b></div>`:''}
+       <div class="row"><span class="muted">CNY 應發</span><b>${fmt(c.netCny)}</b></div>
+       <div class="row"><span class="muted">MYR 補貼</span><b>RM${fmt(c.allowMyr)}</b></div>
+       <div class="row"><span class="muted">MYR 獎勵</span><b>RM${fmt(c.bonusMyr)}</b></div>
+       <div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,.15)"><span class="muted">換幣金額</span><b>CNY ${fmt(c.total)}</b></div>`,
+      e.clientX, e.clientY);
+    col.addEventListener('mouseenter', move);
+    col.addEventListener('mousemove', move);
+    col.addEventListener('mouseleave', hideTip);
+  });
+
+  /* ---- highlight notes ---- */
+  document.getElementById('hlGrid').innerHTML = `
+    <div class="hl-card"><b>3月：福利＋獎勵同時到位</b>CNY 福利合計 74,262（一次性）疊上 MYR 獎勵 98,613，兩筆一起落在 3 月薪資單，換幣金額衝到 CNY 274,401——這筆錢隔月（4月）才變成 USDT 入帳，對上「薪資收入總覽」裡 4 月的離群值。</div>
+    <div class="hl-card"><b>7月：工資合計被貸款還款拉低</b>CNY 工資合計從平常的 54,688 降到 20,040，備註寫著已內含一筆 CNY 34,648 的公司借款第 1 期還款——不是底薪變少，是還款直接在工資這行扣掉了。</div>`;
+
+  /* ---- table ---- */
+  document.getElementById('tbody').innerHTML = cny.map(c => `
+    <tr>
+      <td class="m">${c.month}</td>
+      <td class="num">${fmt(c.wage)}</td>
+      <td class="num neg">${fmt(c.deduction)}</td>
+      <td class="num">${c.welfare>0?'+'+fmt(c.welfare):'－'}</td>
+      <td class="num">${fmt(c.netCny)}</td>
+      <td class="num">RM ${fmt(c.allowMyr)}</td>
+      <td class="num">RM ${fmt(c.bonusMyr)}</td>
+      <td class="num">${c.rate}</td>
+      <td class="num">${fmt(c.total)}</td>
+      <td class="note">${c.note}</td>
+    </tr>`).join('');
+})();
+</script>
+
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>

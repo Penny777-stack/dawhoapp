@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>薪資收入總覽</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#f4f2ec; --surface:#fbfaf7; --surface-2:#f0eee6;
+    --ink:#1c1b17; --ink-2:#57544c; --muted:#8a867a;
+    --hair:#e4e1d6; --hair-strong:#d3cfc1;
+    --accent:#0a8f7c; --accent-soft:#e0f0ec;
+    --c-main:#0a8f7c; --c-myr:#2a78d6; --c-bonus:#e0692f; --loan:#a3671f;
+    --shadow:0 1px 2px rgba(28,27,23,.05), 0 8px 24px -12px rgba(28,27,23,.12);
+    --serif:"Fraunces", ui-serif, Georgia, "Songti TC", serif;
+    --sans:"IBM Plex Sans", "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+    --mono:"IBM Plex Mono", "PingFang TC", "Microsoft JhengHei", ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#121310; --surface:#1b1c18; --surface-2:#232420;
+      --ink:#f3f1e8; --ink-2:#b8b4a6; --muted:#86837a;
+      --hair:#2c2d27; --hair-strong:#3a3b33;
+      --accent:#26b39c; --accent-soft:#123029;
+      --c-main:#1fa48f; --c-myr:#3987e5; --c-bonus:#dd6636; --loan:#c9902f;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#121310; --surface:#1b1c18; --surface-2:#232420;
+    --ink:#f3f1e8; --ink-2:#b8b4a6; --muted:#86837a;
+    --hair:#2c2d27; --hair-strong:#3a3b33;
+    --accent:#26b39c; --accent-soft:#123029;
+    --c-main:#1fa48f; --c-myr:#3987e5; --c-bonus:#dd6636; --loan:#c9902f;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--bg); color:var(--ink); font-family:var(--sans);
+    line-height:1.55; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px; margin:0 auto; padding:clamp(20px,5vw,56px) clamp(16px,4vw,32px) 72px;}
+
+  header.top{display:flex; flex-wrap:wrap; gap:24px 40px; align-items:flex-end;
+    justify-content:space-between; padding-bottom:28px; border-bottom:1px solid var(--hair-strong);}
+  .eyebrow{font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); font-weight:600; margin:0 0 10px;}
+  h1{font-family:var(--serif); font-weight:500; font-size:clamp(26px,4vw,36px);
+    line-height:1.15; margin:0 0 8px; letter-spacing:-.01em; text-wrap:balance;}
+  .sub{margin:0; color:var(--ink-2); font-size:14.5px; max-width:48ch;}
+  .headline{text-align:right; flex-shrink:0;}
+  .headline .fig{font-family:var(--serif); font-weight:500; font-size:clamp(34px,6vw,52px);
+    line-height:1; color:var(--accent); letter-spacing:-.02em;}
+  .headline .fig .cur{font-size:.42em; color:var(--ink-2); font-weight:500; margin-right:.15em; letter-spacing:0;}
+  .headline .cap{margin-top:8px; font-size:13px; color:var(--muted);}
+  .headline .cap b{color:var(--ink-2); font-weight:600; font-variant-numeric:tabular-nums;}
+
+  .theme-btn{position:fixed; top:14px; right:14px; z-index:20; border:1px solid var(--hair-strong);
+    background:var(--surface); color:var(--ink-2); border-radius:999px; padding:6px 12px;
+    font-family:var(--sans); font-size:12px; cursor:pointer; box-shadow:var(--shadow);}
+  .theme-btn:hover{color:var(--ink)}
+
+  section{margin-top:44px;}
+  .sec-head{display:flex; align-items:baseline; gap:12px; margin-bottom:16px; flex-wrap:wrap;}
+  h2{font-family:var(--serif); font-weight:500; font-size:20px; margin:0; letter-spacing:-.01em;}
+  .sec-head .note{font-size:12.5px; color:var(--muted);}
+
+  .card{background:var(--surface); border:1px solid var(--hair); border-radius:14px;
+    padding:22px; box-shadow:var(--shadow);}
+
+  /* ---------- stat tiles ---------- */
+  .tiles{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  .tile{background:var(--surface); border:1px solid var(--hair); border-radius:12px;
+    padding:16px 18px; box-shadow:var(--shadow);}
+  .tile .k{font-size:12.5px; color:var(--ink-2); font-weight:600; display:flex; gap:7px; align-items:center; justify-content:space-between;}
+  .tile .k .nm{display:flex; gap:7px; align-items:center;}
+  .tile .dot{width:8px; height:8px; border-radius:2px; flex:none;}
+  .tile .v{font-family:var(--mono); font-size:22px; font-weight:500; margin-top:10px; letter-spacing:-.01em;}
+  .tile .m{font-size:12px; color:var(--muted); margin-top:2px; font-variant-numeric:tabular-nums;}
+  .tile .track{height:5px; border-radius:3px; background:var(--surface-2); margin-top:12px; overflow:hidden;}
+  .tile .track i{display:block; height:100%; border-radius:3px;}
+  .badge{font-size:10.5px; padding:2px 9px; border-radius:999px; border:1px solid var(--hair-strong);
+    color:var(--ink-2); white-space:nowrap; font-weight:600;}
+  .badge.steady{background:var(--accent-soft); border-color:transparent; color:var(--accent);}
+  .badge.lumpy{background:color-mix(in srgb, var(--c-bonus) 15%, transparent); border-color:transparent; color:var(--c-bonus);}
+
+  /* ---------- trend chart ---------- */
+  .legend{display:flex; gap:18px; margin-bottom:4px; font-size:12.5px; color:var(--ink-2); flex-wrap:wrap;}
+  .legend span{display:flex; align-items:center; gap:7px;}
+  .legend i{width:10px; height:10px; border-radius:3px;}
+  .legend .ln{width:14px; height:0; border-top:2px dashed var(--loan); display:inline-block;}
+  .mchart-scroll{overflow-x:auto; margin-top:16px;}
+  .trend{position:relative; height:250px; min-width:900px;}
+  .trend-grid{position:absolute; inset:0 0 42px 0; display:flex; flex-direction:column; justify-content:space-between;}
+  .trend-grid div{border-top:1px solid var(--hair); position:relative;}
+  .trend-grid div span{position:absolute; left:0; top:-8px; font-size:10.5px; color:var(--muted);
+    font-variant-numeric:tabular-nums; background:var(--surface); padding-right:6px;}
+  .avg-line{position:absolute; left:44px; right:0; border-top:2px dashed var(--muted); z-index:2;}
+  .avg-line span{position:absolute; right:0; top:-16px; font-size:10px; color:var(--muted); font-family:var(--mono);}
+  .tbars{position:absolute; inset:0 0 42px 44px; display:grid; grid-auto-flow:column; grid-auto-columns:1fr;
+    gap:6px; align-items:end;}
+  .loan-svg{position:absolute; inset:0 0 42px 44px; width:calc(100% - 44px); height:calc(100% - 42px);
+    z-index:2; pointer-events:none; overflow:visible; display:block;}
+  .loan-line-path{fill:none; stroke:var(--loan); stroke-width:2; stroke-dasharray:5 4;}
+  .loan-dots{position:absolute; inset:0 0 42px 44px; z-index:3;}
+  .loan-dot{position:absolute; width:7px; height:7px; margin:-3.5px; border-radius:50%;
+    background:var(--loan); border:1.5px solid var(--surface); cursor:pointer;}
+  .tbar-col{display:flex; flex-direction:column; justify-content:flex-end; height:100%; cursor:pointer; position:relative;}
+  .tbar-col .stack{display:flex; flex-direction:column-reverse; border-radius:5px 5px 0 0; overflow:hidden; width:100%; transition:filter .12s;}
+  .tbar-col:hover .stack{filter:brightness(1.07)}
+  .seg{width:100%;}
+  .seg.main{background:var(--c-main);}
+  .seg.myr{background:var(--c-myr); border-bottom:2px solid var(--surface);}
+  .seg.bonus{background:var(--c-bonus); border-bottom:2px solid var(--surface);}
+  .tbar-col .val{position:absolute; top:-18px; left:50%; transform:translateX(-50%); font-size:10.5px;
+    color:var(--ink-2); font-family:var(--mono); white-space:nowrap; opacity:0; transition:opacity .12s;}
+  .tbar-col:hover .val, .tbar-col.peak .val{opacity:1;}
+  .tbar-col.peak .val{color:var(--c-bonus); font-weight:600;}
+  .tbar-col .mlab{position:absolute; top:calc(100% + 8px); left:0; right:0; text-align:center;
+    font-size:9px; color:var(--muted); font-variant-numeric:tabular-nums;
+    writing-mode:vertical-rl; height:50px; margin:0 auto;}
+  .tbar-col.has-data .mlab{color:var(--ink-2); font-weight:600;}
+
+  .tip{position:fixed; z-index:30; background:var(--ink); color:var(--bg); border-radius:9px;
+    padding:10px 12px; font-size:12px; max-width:260px; pointer-events:none; opacity:0;
+    transition:opacity .1s; box-shadow:0 8px 24px -8px rgba(0,0,0,.4); line-height:1.5;}
+  .tip b{font-family:var(--mono); font-weight:500;}
+  .tip .h{font-weight:600; margin-bottom:4px;}
+  .tip .row{display:flex; justify-content:space-between; gap:14px;}
+  .tip .muted{color:var(--muted);}
+
+  /* ---------- highlight notes ---------- */
+  .hl-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin-top:22px;}
+  .hl-card{border:1px solid var(--hair); border-left:3px solid var(--c-bonus); border-radius:10px;
+    padding:13px 15px; background:var(--surface-2); font-size:12.5px; color:var(--ink-2); line-height:1.6;}
+  .hl-card b{color:var(--ink); font-family:var(--serif); font-size:14px; font-weight:500; display:block; margin-bottom:4px;}
+
+  /* ---------- pending banner ---------- */
+  .pending{display:flex; gap:12px; align-items:flex-start; background:var(--accent-soft);
+    border-radius:10px; padding:14px 16px; font-size:12.5px; color:var(--ink-2); line-height:1.6;}
+  .pending b{color:var(--ink);}
+
+  /* ---------- table ---------- */
+  .filters{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; align-items:center;}
+  .filters .grp{display:flex; gap:6px; background:var(--surface-2); padding:4px; border-radius:999px; flex-wrap:wrap;}
+  .chip{border:none; background:transparent; color:var(--ink-2); font-family:var(--sans); font-size:12.5px;
+    padding:4px 12px; border-radius:999px; cursor:pointer; white-space:nowrap;}
+  .chip[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:var(--shadow); font-weight:600;}
+  .filters .count{margin-left:auto; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;}
+
+  .tbl-scroll{overflow-x:auto; border:1px solid var(--hair); border-radius:12px; background:var(--surface);
+    box-shadow:var(--shadow);}
+  table{border-collapse:collapse; width:100%; min-width:760px; font-size:13px;}
+  thead th{position:sticky; top:0; background:var(--surface); text-align:left; font-weight:600;
+    color:var(--ink-2); padding:11px 14px; border-bottom:1px solid var(--hair-strong);
+    cursor:pointer; white-space:nowrap; user-select:none; font-size:12px; letter-spacing:.02em;}
+  thead th .ar{color:var(--muted); font-size:10px; margin-left:3px;}
+  thead th.num, td.num{text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums;}
+  tbody td{padding:10px 14px; border-bottom:1px solid var(--hair); color:var(--ink-2); vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover td{background:var(--surface-2);}
+  td.item{color:var(--ink); font-weight:500; white-space:nowrap;}
+  .pill{display:inline-block; white-space:nowrap; font-size:11px; padding:1px 8px; border-radius:999px;
+    font-weight:600; border:1px solid var(--hair-strong); color:var(--ink-2);}
+  .pill.main{background:var(--accent-soft); border-color:transparent; color:var(--accent);}
+  td.note{color:var(--muted); font-size:11.5px; max-width:300px; min-width:200px;}
+  .stattag{font-size:11px; color:var(--muted); white-space:nowrap;}
+  .stattag.pending{color:var(--c-bonus);}
+
+  footer{margin-top:44px; padding-top:18px; border-top:1px solid var(--hair);
+    font-size:11.5px; color:var(--muted); line-height:1.7;}
+  footer code{font-family:var(--mono); color:var(--ink-2);}
+
+  /* ---------- mobile month picker (replaces wide chart on small screens) ---------- */
+  .mobile-trend{display:none;}
+  .mv-picker{display:flex; align-items:center; gap:10px; margin-top:16px;}
+  .mv-picker button{width:36px; height:36px; flex:none; border:1px solid var(--hair-strong);
+    background:var(--surface); color:var(--ink-2); border-radius:10px; font-size:16px; cursor:pointer;}
+  .mv-picker button:hover{color:var(--ink); border-color:var(--ink-2);}
+  .mv-picker select{flex:1; border:1px solid var(--hair-strong); background:var(--surface); color:var(--ink);
+    border-radius:10px; padding:9px 12px; font-family:var(--sans); font-size:14px; font-variant-numeric:tabular-nums;}
+  .mv-card{margin-top:16px; padding-top:16px; border-top:1px solid var(--hair);}
+  .mv-total{font-family:var(--serif); font-size:19px; color:var(--ink); margin-bottom:4px;}
+  .mv-total b{color:var(--accent); font-weight:600;}
+  .mv-sub{font-size:12px; color:var(--muted); margin-bottom:14px;}
+  .mv-row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0;
+    font-size:13px; border-bottom:1px solid var(--hair);}
+  .mv-row:last-child{border-bottom:none;}
+  .mv-row .nm{display:flex; align-items:center; gap:8px; color:var(--ink-2);}
+  .mv-row .nm i{width:8px; height:8px; border-radius:2px; flex:none;}
+  .mv-row .amt{font-family:var(--mono); color:var(--ink); font-weight:500; white-space:nowrap;}
+  .mv-row.loan .nm i{background:var(--loan);}
+  .mv-row.loan .amt{color:var(--loan);}
+  .mv-empty{font-size:12.5px; color:var(--muted); padding:8px 0;}
+
+  @media (max-width:720px){
+    header.top{flex-direction:column; align-items:flex-start;}
+    .headline{text-align:left;}
+    .tiles{grid-template-columns:1fr;}
+    .tbars{padding-left:38px;}
+    .mchart-scroll{display:none;}
+    .mobile-trend{display:block;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+</style>
+<style>.pwa-back{position:fixed;top:14px;left:14px;z-index:20;border:1px solid var(--hair-strong,#d3cfc1);
+  background:var(--surface,#fbfaf7);color:var(--ink-2,#57544c);border-radius:999px;padding:6px 13px;
+  font-family:var(--sans,sans-serif);font-size:12px;text-decoration:none;box-shadow:var(--shadow,0 1px 2px rgba(0,0,0,.1));}
+.pwa-back:hover{color:var(--ink,#1c1b17);}</style>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#f4f2ec">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="資產App">
+
+</head>
+<body>
+<a href="./index.html" class="pwa-back">← 返回首頁</a>
+
+
+<button class="theme-btn" id="themeBtn" type="button">◑ 主題</button>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">資產 App · 收入總帳分頁</p>
+      <h1>薪資收入總覽</h1>
+      <p class="sub">兩份工作、兩種幣別，加上不定期獎金——依「首頁認列口徑」去重後，每個月實際入帳多少、來自哪裡。</p>
+    </div>
+    <div class="headline">
+      <div class="fig"><span class="cur">NT$</span><span id="figTotal">—</span></div>
+      <div class="cap"><b id="figRange">—</b> 合計 · 月均 <b id="figAvg">—</b></div>
+    </div>
+  </header>
+
+  <section id="tiles-sec">
+    <div class="sec-head"><h2>三種收入來源</h2><span class="note">依 8 個月變動係數判斷穩定度</span></div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section id="trend">
+    <div class="sec-head"><h2>月度收入趨勢</h2><span class="note">現金流月份（實際入帳月份），非薪資歸屬月份；圖表延伸到公司借款扣完為止</span></div>
+    <div class="card">
+      <div class="legend">
+        <span><i style="background:var(--c-main)"></i>主業薪資（USDT）</span>
+        <span><i style="background:var(--c-myr)"></i>在地薪資（MYR）</span>
+        <span><i style="background:var(--c-bonus)"></i>獎金／其他</span>
+        <span><span class="ln"></span>公司借款月扣款（24 期）</span>
+      </div>
+      <div class="mchart-scroll">
+        <div class="trend">
+          <div class="trend-grid" id="trendGrid"></div>
+          <div class="tbars" id="tbars"></div>
+          <svg class="loan-svg" id="loanSvg" preserveAspectRatio="none"></svg>
+          <div class="loan-dots" id="loanDots"></div>
+        </div>
+      </div>
+
+      <div class="mobile-trend" id="mobileTrend">
+        <div class="mv-picker">
+          <button id="mvPrev" type="button" aria-label="上一月">‹</button>
+          <select id="mvSelect"></select>
+          <button id="mvNext" type="button" aria-label="下一月">›</button>
+        </div>
+        <div class="mv-card" id="mvCard"></div>
+      </div>
+
+      <div class="hl-grid" id="hlGrid"></div>
+    </div>
+  </section>
+
+  <section id="pending-sec">
+    <div class="card pending" id="pendingCard"></div>
+  </section>
+
+  <section id="detail">
+    <div class="sec-head"><h2>收入事件明細</h2><span class="note">點欄位標題排序；已排除「錢包 → 銀行」的資金移轉，避免重複計算</span></div>
+    <div class="filters">
+      <div class="grp" data-filter="cat">
+        <button class="chip" data-v="all" aria-pressed="true">全部</button>
+        <button class="chip" data-v="主業薪資（USDT）" aria-pressed="false">主業（USDT）</button>
+        <button class="chip" data-v="在地薪資（MYR）" aria-pressed="false">在地（MYR）</button>
+        <button class="chip" data-v="獎金／其他" aria-pressed="false">獎金／其他</button>
+      </div>
+      <span class="count" id="rowCount"></span>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th data-sort="cfMonth">現金流月份<span class="ar">▾</span></th>
+          <th data-sort="payMonth">歸屬月份<span class="ar"></span></th>
+          <th data-sort="label">收入名目<span class="ar"></span></th>
+          <th data-sort="channel">來源渠道<span class="ar"></span></th>
+          <th class="num" data-sort="amt">原幣金額<span class="ar"></span></th>
+          <th class="num" data-sort="twd">TWD 金額<span class="ar"></span></th>
+          <th data-sort="status">狀態<span class="ar"></span></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    資料來源：Google 試算表「收入總帳」分頁，範圍 2026/01–08。<br>
+    口徑：公司薪資以 USDT 錢包首次入帳認列收入；USDT → Kraken → 銀行帳戶僅為資金移轉，不重複計入，本頁已依「首頁納入＝是」篩除這些移轉列。USDT／MYR 原幣金額依入帳當月歷史匯率換算 TWD。<br>
+    「主業薪資」金額包含公司給的補貼與不定期獎勵，會隨薪資單周期波動，不是固定底薪；細節可對照「薪資對帳」「CNY薪資明細」「MYR薪資明細」分頁。<br>
+    公司借款月扣款線取自「負債繳款記錄」分頁的 24 期還款排程（RM500,000，2026/07–2028/06），以 MYR/TWD ≈ 7.86 估算 TWD；第 3 期起（2026/09 以後）為排程金額，尚未實際發生，僅供對照，不是已入帳收入的一部分。
+  </footer>
+</div>
+
+<div class="tip" id="tip"></div>
+
+<script>const DATA = {"months":["2026/01","2026/02","2026/03","2026/04","2026/05","2026/06","2026/07","2026/08"],"cats":["主業薪資（USDT）","在地薪資（MYR）","獎金／其他"],"monthly":{"2026/01":{"主業薪資（USDT）":471267,"在地薪資（MYR）":111071,"獎金／其他":0},"2026/02":{"主業薪資（USDT）":255417,"在地薪資（MYR）":70426,"獎金／其他":0},"2026/03":{"主業薪資（USDT）":373180,"在地薪資（MYR）":69726,"獎金／其他":11441},"2026/04":{"主業薪資（USDT）":1307781,"在地薪資（MYR）":69886,"獎金／其他":0},"2026/05":{"主業薪資（USDT）":472130,"在地薪資（MYR）":69106,"獎金／其他":0},"2026/06":{"主業薪資（USDT）":488275,"在地薪資（MYR）":68370,"獎金／其他":0},"2026/07":{"主業薪資（USDT）":634996,"在地薪資（MYR）":68996,"獎金／其他":33496},"2026/08":{"主業薪資（USDT）":92789,"在地薪資（MYR）":68296,"獎金／其他":255766}},"catSeries":{"主業薪資（USDT）":{"monthly":[471267,255417,373180,1307781,472130,488275,634996,92789],"total":4095835,"mean":511979,"cv":0.66},"在地薪資（MYR）":{"monthly":[111071,70426,69726,69886,69106,68370,68996,68296],"total":595877,"mean":74485,"cv":0.19},"獎金／其他":{"monthly":[0,0,11441,0,0,0,33496,255766],"total":300703,"mean":37588,"cv":2.21}},"grand":4992415,"avgMonthly":624052,"pending":[],"events":[{"cfMonth":"2026/08","payMonth":"2026-07","label":"公司薪資","channel":"區塊鏈 USDT 錢包","cur":"USDT","amt":2932.55,"incl":"是","twd":92789,"status":"已確認","cat":"主業薪資（USDT）"},{"cfMonth":"2026/08","payMonth":"2026-07","label":"績效工資獎勵補發","channel":"區塊鏈 USDT 錢包","cur":"USDT","amt":8083.36,"incl":"是","twd":255766,"status":"已確認","cat":"獎金／其他"},{"cfMonth":"2026/08","payMonth":"2026-07","label":"MYR 薪資 NETT PAY","channel":"CIMB","cur":"MYR","amt":8689.9,"incl":"是","twd":68296,"status":"已確認","cat":"在地薪資（MYR）"},{"cfMonth":"2026/07","payMonth":"2026-06","label":"MYR 薪資 NETT PAY","channel":"CIMB","cur":"MYR","amt":8689.9,"incl":"是","twd":68996,"status":"已確認","cat":"在地薪資（MYR）"},{"cfMonth":"2026/07","payMonth":"2026-06","label":"公司薪資","channel":"區塊鏈 USDT 錢包","cur":"USDT","amt":19601.67,"incl":"是","twd":634996,"status":"已確認","cat":"主業薪資（USDT）"},{"cfMonth":"2026/07","payMonth":"未以薪資月份配對","label":"公司款項最終入帳","channel":"Kraken → 國泰","cur":"USD","amt":20000.0,"incl":"否","twd":null,"status":"已確認","cat":"其他"},{"cfMonth":"2026/07","payMonth":"2026-07","label":"推薦獎勵","channel":"區塊鏈 USDT 錢包","cur":"USDT","amt":1034.0,"incl":"是","twd":33496,"status":"已確認","cat":"獎金／其他"},{"cfMonth":"2026/06","payMonth":"2026-05","label":"MYR 薪資 NETT PAY","channel":"CIMB","cur":"MYR","amt":8734.55,"incl":"是","twd":68370,"status":"已確認","cat":"在地薪資（MYR）"},{"cfMonth":"2026/06","payMonth":"2026-05","label":"公司薪資","channel":"區塊鏈 USDT 錢包","cur":"USDT","amt":15322.79,"incl":"是","twd":488275,"status":"已確認","cat":"主業薪資（USDT）"},{"cfMonth":"2026/05","payMonth":"2026-04","label":"MYR 薪資 NETT PAY","channel":"CIMB","cur":"MYR","amt":8734.55,"incl":"是","twd":69106,"status":"已確認","cat":"在地薪資（MYR）"},{"cfMonth":"2026/05","payMonth":"2026-04","label":"公司薪資","channel":"區塊鏈 USDT 錢包","cur":"USDT","amt":15030.34,"incl":"是","twd":472130,"status":"已確認","cat":"主業薪資（USDT）"},{"cfMonth":"2026/05","payMonth":"未以薪資月份配對","label":"公司款項最終入帳","channel":"Kraken → 國泰","cur":"USD","amt":19987.0,"incl":"否","twd":null,"status":"已確認","cat":"其他"},{"cfMonth":"2026/04","payMonth":"2026-03","label":"MYR 薪資 NETT PAY","channel":"CIMB","cur":"MYR","amt":8734.55,"incl":"是","twd":69886,"status":"已確認","cat":"在地薪資（MYR）"},{"cfMonth":"2026/04","payMonth":"2026-03","label":"公司薪資","channel":"區塊鏈 USDT 錢包","cur":"USDT","amt":41350.81,"incl":"是","twd":1307781,"status":"已確認","cat":"主業薪資（USDT）"},{"cfMonth":"2026/04","payMonth":"未以薪資月份配對","label":"公司款項最終入帳","channel":"Kraken → 國泰","cur":"USD","amt":21000.0,"incl":"否","twd":null,"status":"已確認","cat":"其他"},{"cfMonth":"2026/03","payMonth":"2026-02","label":"MYR 薪資 NETT PAY","channel":"CIMB","cur":"MYR","amt":8734.55,"incl":"是","twd":69726,"status":"已確認","cat":"在地薪資（MYR）"},{"cfMonth":"2026/03","payMonth":"2026-02","label":"公司薪資","channel":"區塊鏈 USDT 錢包","cur":"USDT","amt":11647.67,"incl":"是","twd":373180,"status":"已確認","cat":"主業薪資（USDT）"},{"cfMonth":"2026/03","payMonth":"非薪資","label":"工作手機報銷","channel":"區塊鏈 USDT 錢包","cur":"USDT","amt":357.1,"incl":"是","twd":11441,"status":"已確認","cat":"獎金／其他"},{"cfMonth":"2026/03","payMonth":"未以薪資月份配對","label":"公司款項最終入帳","channel":"Kraken → 國泰","cur":"USD","amt":20000.0,"incl":"否","twd":null,"status":"已確認","cat":"其他"},{"cfMonth":"2026/02","payMonth":"2026-01","label":"MYR 薪資 NETT PAY","channel":"CIMB","cur":"MYR","amt":8734.55,"incl":"是","twd":70426,"status":"已確認","cat":"在地薪資（MYR）"},{"cfMonth":"2026/02","payMonth":"未以薪資月份配對","label":"公司款項最終入帳","channel":"Kraken → 國泰","cur":"USD","amt":14865.24,"incl":"否","twd":null,"status":"已確認","cat":"其他"},{"cfMonth":"2026/02","payMonth":"2026-01","label":"公司薪資","channel":"區塊鏈 USDT 錢包","cur":"USDT","amt":8140.78,"incl":"是","twd":255417,"status":"已確認","cat":"主業薪資（USDT）"},{"cfMonth":"2026/01","payMonth":"2025-12","label":"公司薪資","channel":"區塊鏈 USDT 錢包","cur":"USDT","amt":14921.56,"incl":"是","twd":471267,"status":"已確認","cat":"主業薪資（USDT）"},{"cfMonth":"2026/01","payMonth":"未以薪資月份配對","label":"公司款項最終入帳","channel":"Kraken → 國泰","cur":"USD","amt":15976.0,"incl":"否","twd":null,"status":"已確認","cat":"其他"},{"cfMonth":"2026/01","payMonth":"2025-12","label":"MYR 薪資 NETT PAY","channel":"CIMB","cur":"MYR","amt":13857.8,"incl":"是","twd":111071,"status":"已確認","cat":"在地薪資（MYR）"}],"chartMonths":["2026/01","2026/02","2026/03","2026/04","2026/05","2026/06","2026/07","2026/08","2026/09","2026/10","2026/11","2026/12","2027/01","2027/02","2027/03","2027/04","2027/05","2027/06","2027/07","2027/08","2027/09","2027/10","2027/11","2027/12","2028/01","2028/02","2028/03","2028/04","2028/05","2028/06"],"loanSchedule":[{"month":"2026/07","period":1,"amtMyr":21000,"amtTwd":165060},{"month":"2026/08","period":2,"amtMyr":21000,"amtTwd":165060},{"month":"2026/09","period":3,"amtMyr":21000,"amtTwd":165060},{"month":"2026/10","period":4,"amtMyr":21000,"amtTwd":165060},{"month":"2026/11","period":5,"amtMyr":21000,"amtTwd":165060},{"month":"2026/12","period":6,"amtMyr":21000,"amtTwd":165060},{"month":"2027/01","period":7,"amtMyr":21000,"amtTwd":165060},{"month":"2027/02","period":8,"amtMyr":21000,"amtTwd":165060},{"month":"2027/03","period":9,"amtMyr":21000,"amtTwd":165060},{"month":"2027/04","period":10,"amtMyr":21000,"amtTwd":165060},{"month":"2027/05","period":11,"amtMyr":21000,"amtTwd":165060},{"month":"2027/06","period":12,"amtMyr":21000,"amtTwd":165060},{"month":"2027/07","period":13,"amtMyr":21000,"amtTwd":165060},{"month":"2027/08","period":14,"amtMyr":21000,"amtTwd":165060},{"month":"2027/09","period":15,"amtMyr":21000,"amtTwd":165060},{"month":"2027/10","period":16,"amtMyr":21000,"amtTwd":165060},{"month":"2027/11","period":17,"amtMyr":21000,"amtTwd":165060},{"month":"2027/12","period":18,"amtMyr":21000,"amtTwd":165060},{"month":"2028/01","period":19,"amtMyr":21000,"amtTwd":165060},{"month":"2028/02","period":20,"amtMyr":21000,"amtTwd":165060},{"month":"2028/03","period":21,"amtMyr":21000,"amtTwd":165060},{"month":"2028/04","period":22,"amtMyr":21000,"amtTwd":165060},{"month":"2028/05","period":23,"amtMyr":21000,"amtTwd":165060},{"month":"2028/06","period":24,"amtMyr":17000,"amtTwd":133620}]};</script>
+<script>
+(function(){
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+  const months = DATA.months, cats = DATA.cats, monthly = DATA.monthly, cs = DATA.catSeries;
+  const monthLabels = months.map(m => m.split('/')[1] + '月');
+  const catColorVar = {'主業薪資（USDT）':'--c-main','在地薪資（MYR）':'--c-myr','獎金／其他':'--c-bonus'};
+
+  document.getElementById('figTotal').textContent = fmt(DATA.grand);
+  document.getElementById('figRange').textContent = months[0] + '–' + months[months.length-1];
+  document.getElementById('figAvg').textContent = 'NT$' + fmt(DATA.avgMonthly);
+
+  /* ---- theme toggle ---- */
+  const root = document.documentElement, tb = document.getElementById('themeBtn');
+  tb.addEventListener('click', () => {
+    const cur = root.getAttribute('data-theme');
+    const sysDark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+    const next = cur ? (cur === 'dark' ? 'light' : 'dark') : (sysDark ? 'light' : 'dark');
+    root.setAttribute('data-theme', next);
+  });
+
+  /* ---- stat tiles ---- */
+  document.getElementById('tiles').innerHTML = cats.map(c => {
+    const s = cs[c];
+    const pct = Math.round(s.total / DATA.grand * 100);
+    const badge = s.cv >= 1 ? `<span class="badge lumpy">不定期</span>`
+      : s.cv >= 0.55 ? `<span class="badge">中度波動</span>`
+      : `<span class="badge steady">穩定</span>`;
+    return `<div class="tile">
+      <div class="k"><span class="nm"><span class="dot" style="background:var(${catColorVar[c]})"></span>${c}</span>${badge}</div>
+      <div class="v">NT$${fmt(s.total)}</div>
+      <div class="m">佔整體 ${pct}% · 月均 NT$${fmt(s.mean)}</div>
+      <div class="track"><i style="width:${pct}%;background:var(${catColorVar[c]})"></i></div>
+    </div>`;
+  }).join('');
+
+  /* ---- trend chart (extended to cover the full loan schedule) ---- */
+  const chartMonths = DATA.chartMonths;
+  const loanByMonth = {};
+  DATA.loanSchedule.forEach(l => { loanByMonth[l.month] = l; });
+  const chartLabels = chartMonths.map(m => m.slice(2));
+  const totals = chartMonths.map(m => monthly[m] ? cats.reduce((s,c) => s + monthly[m][c], 0) : 0);
+  const maxV = Math.max(...totals);
+  const axisMax = Math.ceil(maxV / 200000) * 200000;
+  const peakI = totals.indexOf(maxV);
+  const grid = document.getElementById('trendGrid');
+  const steps = 4;
+  grid.innerHTML = Array.from({length: steps+1}, (_,i) => {
+    const val = axisMax - i*(axisMax/steps);
+    return `<div><span>${val ? fmt(val) : '0'}</span></div>`;
+  }).join('');
+
+  const segClass = {'主業薪資（USDT）':'main','在地薪資（MYR）':'myr','獎金／其他':'bonus'};
+  const tbars = document.getElementById('tbars');
+  tbars.innerHTML = chartMonths.map((m,i) => {
+    const hasData = !!monthly[m];
+    const total = totals[i];
+    const isPeak = i === peakI && hasData;
+    if (!hasData){
+      return `<div class="tbar-col" data-i="${i}"><div class="mlab">${chartLabels[i]}</div></div>`;
+    }
+    const segs = cats.map(c => ({c, v: monthly[m][c]})).filter(x => x.v > 0);
+    const stackH = total / axisMax * 100;
+    return `<div class="tbar-col has-data${isPeak?' peak':''}" data-i="${i}">
+      <div class="val">NT$${fmt(total)}</div>
+      <div class="stack" style="height:${stackH}%">
+        ${segs.map(s => `<div class="seg ${segClass[s.c]}" style="flex-basis:${s.v/total*100}%"></div>`).join('')}
+      </div>
+      <div class="mlab">${chartLabels[i]}</div>
+    </div>`;
+  }).join('');
+
+  /* ---- loan repayment line overlay ---- */
+  const loanSvg = document.getElementById('loanSvg');
+  const loanDots = document.getElementById('loanDots');
+  const n = chartMonths.length;
+  loanSvg.setAttribute('viewBox', `0 0 ${n} 100`);
+  const loanPts = chartMonths.map((m,i) => loanByMonth[m] ? {i, v: loanByMonth[m]} : null).filter(Boolean);
+  if (loanPts.length){
+    const xPct = i => (i + 0.5) / n * 100;
+    const yOf = v => 100 - (v.amtTwd / axisMax * 100);
+    const pathD = loanPts.map((p,k) => `${k===0?'M':'L'}${p.i+0.5},${yOf(p.v)}`).join(' ');
+    loanSvg.innerHTML = `<path d="${pathD}" class="loan-line-path" vector-effect="non-scaling-stroke"></path>`;
+    loanDots.innerHTML = loanPts.map(p => `<span class="loan-dot" style="left:${xPct(p.i)}%; top:${yOf(p.v)}%"
+      data-period="${p.v.period}" data-i="${p.i}"></span>`).join('');
+  }
+
+  /* ---- mobile: month picker + detail card (replaces the wide chart on small screens) ---- */
+  (function(){
+    const sel = document.getElementById('mvSelect');
+    const mvCard = document.getElementById('mvCard');
+    const prevBtn = document.getElementById('mvPrev');
+    const nextBtn = document.getElementById('mvNext');
+    const catColor = {'主業薪資（USDT）':'var(--c-main)','在地薪資（MYR）':'var(--c-myr)','獎金／其他':'var(--c-bonus)'};
+
+    sel.innerHTML = chartMonths.map((m,i) => {
+      const tag = monthly[m] ? '（有收入）' : (loanByMonth[m] ? '（借款扣款）' : '');
+      return `<option value="${i}">${m}${tag}</option>`;
+    }).join('');
+
+    function renderMonth(i){
+      i = Math.max(0, Math.min(chartMonths.length - 1, i));
+      sel.value = i;
+      const m = chartMonths[i];
+      const hasIncome = !!monthly[m];
+      const loan = loanByMonth[m];
+      const total = hasIncome ? cats.reduce((s,c) => s + monthly[m][c], 0) : 0;
+
+      let html = '';
+      if (hasIncome){
+        html += `<div class="mv-total">${m} 收入 <b>NT$${fmt(total)}</b></div>`;
+        html += `<div class="mv-sub">現金流月份（實際入帳）</div>`;
+        cats.forEach(c => {
+          const v = monthly[m][c];
+          if (v > 0) html += `<div class="mv-row"><span class="nm"><i style="background:${catColor[c]}"></i>${c}</span><span class="amt">NT$${fmt(v)}</span></div>`;
+        });
+      } else {
+        html += `<div class="mv-total">${m}</div>`;
+        html += `<div class="mv-sub">${loan ? '這個月沒有薪資入帳資料，只有借款扣款排程' : '沒有資料'}</div>`;
+      }
+      if (loan){
+        html += `<div class="mv-row loan"><span class="nm"><i></i>公司借款月扣款（第 ${loan.period} 期）</span><span class="amt">－NT$${fmt(loan.amtTwd)}（RM${fmt(loan.amtMyr)}）</span></div>`;
+      }
+      if (!hasIncome && !loan){
+        html += `<div class="mv-empty">這個月沒有資料。</div>`;
+      }
+      mvCard.innerHTML = html;
+    }
+    sel.addEventListener('change', () => renderMonth(+sel.value));
+    prevBtn.addEventListener('click', () => renderMonth(+sel.value - 1));
+    nextBtn.addEventListener('click', () => renderMonth(+sel.value + 1));
+    renderMonth(7); // default: 2026/08, the latest month with real income data
+  })();
+
+  /* ---- tooltip ---- */
+  const tip = document.getElementById('tip');
+  function showTip(html, x, y){
+    tip.innerHTML = html; tip.style.opacity = '1';
+    const r = tip.getBoundingClientRect();
+    let left = x + 14, top = y - r.height - 10;
+    if (left + r.width > window.innerWidth - 8) left = x - r.width - 14;
+    if (top < 8) top = y + 16;
+    tip.style.left = left + 'px'; tip.style.top = top + 'px';
+  }
+  const hideTip = () => tip.style.opacity = '0';
+  loanDots.querySelectorAll('.loan-dot').forEach(dot => {
+    const move = e => showTip(
+      `<div class="h">${chartMonths[+dot.dataset.i]} · 第 ${dot.dataset.period} 期</div>
+       <div class="row"><span class="muted">扣款金額</span><b>NT$${fmt(loanByMonth[chartMonths[+dot.dataset.i]].amtTwd)}</b></div>
+       <div class="row"><span class="muted">原幣</span><b>RM ${fmt(loanByMonth[chartMonths[+dot.dataset.i]].amtMyr)}</b></div>`,
+      e.clientX, e.clientY);
+    dot.addEventListener('mouseenter', move);
+    dot.addEventListener('mousemove', move);
+    dot.addEventListener('mouseleave', hideTip);
+  });
+  tbars.querySelectorAll('.tbar-col.has-data').forEach(col => {
+    const i = +col.dataset.i, m = chartMonths[i];
+    const move = e => showTip(
+      `<div class="h">${m}</div>` +
+      cats.map(c => monthly[m][c] > 0 ? `<div class="row"><span class="muted">${c}</span><b>NT$${fmt(monthly[m][c])}</b></div>` : '').join('') +
+      `<div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,.15)"><span class="muted">合計</span><b>NT$${fmt(totals[i])}</b></div>`,
+      e.clientX, e.clientY);
+    col.addEventListener('mouseenter', move);
+    col.addEventListener('mousemove', move);
+    col.addEventListener('mouseleave', hideTip);
+  });
+
+  /* ---- highlight notes ---- */
+  document.getElementById('hlGrid').innerHTML = `
+    <div class="hl-card"><b>4月：一次性獎勵集中兌現</b>3 月薪資單裡有一筆較大的一次性福利與獎勵，隨公司薪資單周期延遲，實際換成 USDT 入帳落在 4 月，才讓當月主業薪資看起來特別高——不是每月都有這筆錢。</div>
+    <div class="hl-card"><b>8月：獎金補發，薪資也已到位</b>25.6 萬的獎金／其他，是 7 月績效工資獎勵的補發；同月的 MYR 在地薪資（RM8,689.9）原本卡在待確認，查證後確認 8/7 已準時入帳，現已計入。</div>
+    <div class="hl-card" style="border-left-color:var(--loan)"><b>圖上那條虛線：公司借款月扣款</b>RM500,000 分 24 期直接從薪資扣，每期 RM21,000（最後一期 RM17,000），2026/07 起、2028/06 結束。8 個月的實際收入資料只涵蓋第 1～2 期，圖表刻意畫到最後一期，讓你看到這筆錢還要再扣多久。</div>`;
+
+  /* ---- pending banner ---- */
+  const pendingCard = document.getElementById('pendingCard');
+  if (DATA.pending && DATA.pending.length){
+    pendingCard.innerHTML = '⏳ ' + DATA.pending.map(p =>
+      `<span><b>待確認：</b>${p.payMonth} ${p.label}，${p.cur} ${p.amt.toLocaleString('en-US')}——CIMB 尚未查到實際入帳，未列入以上統計。</span>`).join('');
+  } else {
+    pendingCard.innerHTML = `✓ <span>${DATA.events.length} 筆收入事件全數已確認，沒有待處理項目。</span>`;
+  }
+
+  /* ---- detail table ---- */
+  const tbody = document.getElementById('tbody');
+  let rows = DATA.events;
+  let sortKey = 'cfMonth', sortDir = -1;
+  let filterCat = 'all';
+
+  function render(){
+    let view = rows.filter(r => filterCat === 'all' || r.cat === filterCat);
+    view.sort((a,b) => {
+      let x = a[sortKey], y = b[sortKey];
+      if (x === null || x === undefined) x = '';
+      if (y === null || y === undefined) y = '';
+      if (typeof x === 'string') return sortDir * String(x).localeCompare(String(y), 'zh-Hant');
+      return sortDir * ((x||0) - (y||0));
+    });
+    const sumV = view.reduce((s,r) => s + (r.twd||0), 0);
+    document.getElementById('rowCount').textContent = `${view.length} 筆 · 合計 NT$${fmt(sumV)}`;
+    tbody.innerHTML = view.map(r => `
+      <tr>
+        <td class="item">${r.cfMonth}</td>
+        <td>${r.payMonth}</td>
+        <td><span class="pill ${r.cat==='主業薪資（USDT）'?'main':''}">${r.label}</span></td>
+        <td>${r.channel}</td>
+        <td class="num">${r.cur} ${r.amt.toLocaleString('en-US')}</td>
+        <td class="num">${r.twd!=null ? fmt(r.twd) : '－'}</td>
+        <td><span class="stattag ${r.status==='待確認'?'pending':''}">${r.status}${(r.incl==='否' && r.status!=='待確認')?'（資金移轉，未列收入）':''}</span></td>
+      </tr>`).join('');
+    document.querySelectorAll('thead th').forEach(th => {
+      const ar = th.querySelector('.ar');
+      if (ar) ar.textContent = th.dataset.sort === sortKey ? (sortDir < 0 ? '▾' : '▴') : '';
+    });
+  }
+  document.querySelectorAll('thead th').forEach(th => {
+    th.addEventListener('click', () => {
+      const k = th.dataset.sort;
+      if (k === sortKey) sortDir *= -1;
+      else { sortKey = k; sortDir = (k==='label'||k==='channel'||k==='status'||k==='payMonth') ? 1 : -1; }
+      render();
+    });
+  });
+  document.querySelectorAll('.filters .grp').forEach(grp => {
+    grp.addEventListener('click', e => {
+      const btn = e.target.closest('.chip'); if (!btn) return;
+      filterCat = btn.dataset.v;
+      grp.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c === btn));
+      render();
+    });
+  });
+  render();
+})();
+</script>
+
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>淨資產與負債總覽</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#f4f2ec; --surface:#fbfaf7; --surface-2:#f0eee6;
+    --ink:#1c1b17; --ink-2:#57544c; --muted:#8a867a;
+    --hair:#e4e1d6; --hair-strong:#d3cfc1;
+    --accent:#0a8f7c; --accent-soft:#e0f0ec;
+    --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#eda100; --c5:#e87ba4; --c6:#4a3aa7;
+    --loan:#a3671f;
+    --shadow:0 1px 2px rgba(28,27,23,.05), 0 8px 24px -12px rgba(28,27,23,.12);
+    --serif:"Fraunces", ui-serif, Georgia, "Songti TC", serif;
+    --sans:"IBM Plex Sans", "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+    --mono:"IBM Plex Mono", "PingFang TC", "Microsoft JhengHei", ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#121310; --surface:#1b1c18; --surface-2:#232420;
+      --ink:#f3f1e8; --ink-2:#b8b4a6; --muted:#86837a;
+      --hair:#2c2d27; --hair-strong:#3a3b33;
+      --accent:#26b39c; --accent-soft:#123029;
+      --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#9085e9;
+      --loan:#c9902f;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#121310; --surface:#1b1c18; --surface-2:#232420;
+    --ink:#f3f1e8; --ink-2:#b8b4a6; --muted:#86837a;
+    --hair:#2c2d27; --hair-strong:#3a3b33;
+    --accent:#26b39c; --accent-soft:#123029;
+    --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#9085e9;
+    --loan:#c9902f;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--bg); color:var(--ink); font-family:var(--sans);
+    line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+  .wrap{max-width:1080px; margin:0 auto; padding:clamp(20px,5vw,56px) clamp(16px,4vw,32px) 72px;}
+
+  header.top{display:flex; flex-wrap:wrap; gap:24px 40px; align-items:flex-end;
+    justify-content:space-between; padding-bottom:28px; border-bottom:1px solid var(--hair-strong);}
+  .eyebrow{font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); font-weight:600; margin:0 0 10px;}
+  h1{font-family:var(--serif); font-weight:500; font-size:clamp(26px,4vw,36px);
+    line-height:1.15; margin:0 0 8px; letter-spacing:-.01em; text-wrap:balance;}
+  .sub{margin:0; color:var(--ink-2); font-size:14.5px; max-width:52ch;}
+  .headline{text-align:right; flex-shrink:0;}
+  .headline .fig{font-family:var(--serif); font-weight:500; font-size:clamp(30px,5.5vw,48px);
+    line-height:1; color:var(--accent); letter-spacing:-.02em;}
+  .headline .fig .cur{font-size:.42em; color:var(--ink-2); font-weight:500; margin-right:.15em; letter-spacing:0;}
+  .headline .cap{margin-top:8px; font-size:13px; color:var(--muted);}
+  .headline .cap b{color:var(--ink-2); font-weight:600; font-variant-numeric:tabular-nums;}
+
+  .snapshot-flag{display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color:var(--loan);
+    background:color-mix(in srgb, var(--loan) 14%, transparent); padding:3px 11px; border-radius:999px;
+    font-weight:600; margin-bottom:14px;}
+
+  .theme-btn{position:fixed; top:14px; right:14px; z-index:20; border:1px solid var(--hair-strong);
+    background:var(--surface); color:var(--ink-2); border-radius:999px; padding:6px 12px;
+    font-family:var(--sans); font-size:12px; cursor:pointer; box-shadow:var(--shadow);}
+  .theme-btn:hover{color:var(--ink)}
+
+  section{margin-top:44px;}
+  .sec-head{display:flex; align-items:baseline; gap:12px; margin-bottom:16px; flex-wrap:wrap;}
+  h2{font-family:var(--serif); font-weight:500; font-size:20px; margin:0; letter-spacing:-.01em;}
+  .sec-head .note{font-size:12.5px; color:var(--muted);}
+
+  .card{background:var(--surface); border:1px solid var(--hair); border-radius:14px;
+    padding:22px; box-shadow:var(--shadow);}
+
+  /* ---------- tiles ---------- */
+  .tiles{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+  .tile{background:var(--surface); border:1px solid var(--hair); border-radius:12px;
+    padding:16px 18px; box-shadow:var(--shadow);}
+  .tile .k{font-size:12.5px; color:var(--ink-2); font-weight:600; display:flex; gap:7px; align-items:center;}
+  .tile .dot{width:8px; height:8px; border-radius:2px; flex:none;}
+  .tile .v{font-family:var(--mono); font-size:20px; font-weight:500; margin-top:10px; letter-spacing:-.01em;}
+  .tile .m{font-size:11.5px; color:var(--muted); margin-top:4px;}
+
+  /* ---------- allocation ---------- */
+  .alloc-split{display:flex; height:26px; border-radius:8px; overflow:hidden; gap:2px;}
+  .alloc-split i{display:block; height:100%;}
+  .alloc-list{display:flex; flex-direction:column; margin-top:16px;}
+  .alloc-row{display:grid; grid-template-columns:150px 1fr auto; gap:12px; align-items:center; padding:8px 0;
+    border-bottom:1px solid var(--hair); font-size:13px;}
+  .alloc-row:last-child{border-bottom:none;}
+  .alloc-row .nm{display:flex; align-items:center; gap:8px; color:var(--ink); font-weight:500;}
+  .alloc-row .nm i{width:9px; height:9px; border-radius:3px; flex:none;}
+  .alloc-row .bt{height:8px; border-radius:3px; background:var(--surface-2); overflow:hidden;}
+  .alloc-row .bt i{display:block; height:100%; border-radius:3px;}
+  .alloc-row .vv{font-family:var(--mono); font-size:12px; color:var(--ink-2); text-align:right; white-space:nowrap;}
+
+  /* ---------- balance sheet table ---------- */
+  .bs-table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  .bs-table td{padding:10px 4px; border-bottom:1px solid var(--hair); color:var(--ink-2);}
+  .bs-table tr:last-child td{border-bottom:none;}
+  .bs-table td.lbl{color:var(--ink);}
+  .bs-table td.amt{text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums; color:var(--ink);}
+  .bs-table td.amt.neg{color:var(--c2);}
+  .bs-table tr.sub td{font-weight:600; background:var(--surface-2);}
+  .bs-table tr.sub td.lbl, .bs-table tr.sub td.amt{color:var(--ink);}
+  .bs-table .note-s{display:block; font-size:11px; color:var(--muted); font-weight:400; margin-top:2px;}
+  .loan-txt{color:var(--loan); font-weight:600;}
+
+  /* ---------- accounts table ---------- */
+  .tbl-scroll{overflow-x:auto; border:1px solid var(--hair); border-radius:12px; background:var(--surface);
+    box-shadow:var(--shadow);}
+  table.acct{border-collapse:collapse; width:100%; min-width:640px; font-size:13px;}
+  table.acct th{background:var(--surface); text-align:left; font-weight:600; color:var(--ink-2);
+    padding:10px 14px; border-bottom:1px solid var(--hair-strong); font-size:12px; white-space:nowrap;}
+  table.acct th.num, table.acct td.num{text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums;}
+  table.acct td{padding:9px 14px; border-bottom:1px solid var(--hair); color:var(--ink-2);}
+  table.acct tr:last-child td{border-bottom:none;}
+  table.acct tr.grp td{background:var(--surface-2); font-weight:600; color:var(--ink);}
+  table.acct td.neg{color:var(--c2);}
+
+  /* ---------- loan chain ---------- */
+  .chain{display:flex; flex-direction:column;}
+  .chain-row{display:grid; grid-template-columns:96px 1fr auto; gap:14px; padding:11px 0;
+    border-bottom:1px solid var(--hair); font-size:13px; align-items:baseline;}
+  .chain-row:last-child{border-bottom:none;}
+  .chain-row .dt{color:var(--loan); font-family:var(--mono); font-size:12px; font-weight:600;}
+  .chain-row .ev{color:var(--ink);}
+  .chain-row .ev span{display:block; font-size:11.5px; color:var(--muted); margin-top:2px; font-weight:400;}
+  .chain-row .amt{font-family:var(--mono); color:var(--loan); font-weight:600; white-space:nowrap; text-align:right;}
+
+  footer{margin-top:44px; padding-top:18px; border-top:1px solid var(--hair);
+    font-size:11.5px; color:var(--muted); line-height:1.7;}
+  footer code{font-family:var(--mono); color:var(--ink-2);}
+
+  @media (max-width:720px){
+    header.top{flex-direction:column; align-items:flex-start;}
+    .headline{text-align:left;}
+    .tiles{grid-template-columns:1fr 1fr;}
+    .alloc-row{grid-template-columns:1fr; row-gap:6px;}
+    .alloc-row .vv{text-align:left;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+</style>
+<style>.pwa-back{position:fixed;top:14px;left:14px;z-index:20;border:1px solid var(--hair-strong,#d3cfc1);
+  background:var(--surface,#fbfaf7);color:var(--ink-2,#57544c);border-radius:999px;padding:6px 13px;
+  font-family:var(--sans,sans-serif);font-size:12px;text-decoration:none;box-shadow:var(--shadow,0 1px 2px rgba(0,0,0,.1));}
+.pwa-back:hover{color:var(--ink,#1c1b17);}</style>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#f4f2ec">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="資產App">
+
+</head>
+<body>
+<a href="./index.html" class="pwa-back">← 返回首頁</a>
+
+
+<button class="theme-btn" id="themeBtn" type="button">◑ 主題</button>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">資產 App · 淨資產快照</p>
+      <div class="snapshot-flag">📌 靜態快照 · 2026/09/02</div>
+      <h1>淨資產與負債總覽</h1>
+      <p class="sub">現金、投資、自住置產減去負債(含公司借款)——這份是某一天的存量快照，不像其他儀表板會持續更新。</p>
+    </div>
+    <div class="headline">
+      <div class="fig"><span class="cur">NT$</span><span id="figNet">—</span></div>
+      <div class="cap">資產淨值 · 總資產 <b id="figAssets">—</b> − 負債 <b id="figLiab">—</b></div>
+    </div>
+  </header>
+
+  <section id="tiles-sec">
+    <div class="sec-head"><h2>四個關鍵數字</h2></div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section id="alloc">
+    <div class="sec-head"><h2>資產配置</h2><span class="note">六類，依市值佔比（未扣負債）</span></div>
+    <div class="card">
+      <div class="alloc-split" id="allocSplit"></div>
+      <div class="alloc-list" id="allocList"></div>
+    </div>
+  </section>
+
+  <section id="balance">
+    <div class="sec-head"><h2>資產負債表</h2><span class="note">最新可得餘額，多數帳戶至 2026/09/02</span></div>
+    <div class="card">
+      <table class="bs-table" id="balanceTable"></table>
+    </div>
+  </section>
+
+  <section id="loan">
+    <div class="sec-head"><h2><span class="loan-txt">公司借款</span>資金鏈</h2><span class="note">RM 500,000，資產與負債同額增加，後續為帳戶間移轉</span></div>
+    <div class="card">
+      <div class="chain" id="chainList"></div>
+      <p class="note" style="margin-top:14px; font-size:12px; color:var(--muted); line-height:1.7">
+        取得當下資產與負債同額 +RM 500,000，不是收入；後續存入 CIMB、支付自住訂金、薪資扣還都只是帳戶間或負債面的轉移，不重複計入現金流。
+      </p>
+    </div>
+  </section>
+
+  <section id="accounts">
+    <div class="sec-head"><h2>帳戶明細</h2><span class="note">23 筆，依現金／投資／自住置產／負債分組</span></div>
+    <div class="tbl-scroll">
+      <table class="acct" id="acctTable"></table>
+    </div>
+  </section>
+
+  <footer>
+    資料來源：本機「2026 財務總表」靜態頁面（<code>finance.html</code>），非 Google 試算表即時資料，快照時間 2026/09/02，之後不會自動更新。<br>
+    淨資產口徑：總資產（已對帳現金 ＋ 投資市值 ＋ 自住置產訂金）− 已列負債（彰銀貸款 ＋ 台銀就學貸款）− 公司借款負債。<br>
+    投資市值（NT$12,655,617）與「投資組合總覽」儀表板（NT$12,557,538）取自不同時間點的報價快照，兩者本來就不會完全一致；現金帳戶各自依最新可得的對帳日期入帳，非同一天餘額，加總僅供概估。<br>
+    如果之後想讓這份也接上即時資料、跟其他六份儀表板一樣自動同步，需要把現金帳戶餘額跟自住置產進度定期更新到試算表，再從那裡抓資料。
+  </footer>
+</div>
+
+<script>const DATA = {
+"updated":"2026/09/02",
+"kpi":{"netWorth":18170315.21,"cash":8082373.54,"invest":12655616.56,"liab":4571967.29,"totalAssets":22742282.50},
+"balance":[
+ ["已對帳現金資產",8080674.56,"資產總表「現金」小計；各帳戶依自身最新可得日期"],
+ ["投資市值",12655708.84,"資產總表「投資」小計，依即時市值"],
+ ["已對帳資產總額",22740675.80,"現金 ＋ 投資；不與 8 月流量同日勾稽"],
+ ["自住置產訂金",2004292.40,"7/13 MYR 100,000 ＋ 8/4 MYR 154,000，按交易日匯率成本"],
+ ["已列負債",852881.00,"彰銀擔保貸款 ＋ 台銀就學貸款"],
+ ["公司借款負債（調整項）",3717744.13,"RM 479,000；2026/07 第 1 期薪資扣款後"],
+ ["調整後負債總額",4570625.13,"已列負債 ＋ 公司借款"],
+ ["淨資產（未扣公司借款）",21887794.80,"資訊性比較數字"],
+ ["淨資產（已扣公司借款；首頁口徑）",18170050.67,"與首頁資產淨值一致"]
+],
+"alloc":[
+ ["現金",8082373.54,0.355],
+ ["加密貨幣",5939255.39,0.261],
+ ["美股",3847594.70,0.169],
+ ["自住置產",2004292.40,0.088],
+ ["現金／薪資 USDT",1636151.97,0.072],
+ ["台股",1232614.50,0.054]
+],
+"allocBase":22742282.50,
+"accounts":[
+ ["現金","國泰定存","TWD","2,034,570",2034570,"2026-09"],
+ ["現金","國泰美金","USD","30,101.04",949675.77,"2026-09"],
+ ["現金","第一證券","USD","13,525.14",426712.76,"2026-09"],
+ ["現金","CIMB","MYR","430,976.34",3345009.93,"2026/08/31"],
+ ["現金","支付寶2","CNY","96,982.01",455960.14,"2026-09"],
+ ["現金","永豐大戶","TWD","197,370",197370,"2026/08/31"],
+ ["現金","國泰世華埃及帳戶(4633)","TWD","199,276",199276,"2026-09"],
+ ["現金","國泰世華3C大換新(5959)","TWD","130,394",130394,"2026-09"],
+ ["現金","國泰生活金","TWD","107,799",107799,"2026-09"],
+ ["現金","永豐大戶定存","TWD","105,728",105728,"2026-09"],
+ ["現金","國泰娛樂金","TWD","60,561",60561,"2026-09"],
+ ["現金","國泰證券","TWD","30,436",30436,"2026-09"],
+ ["現金","彰銀活儲","TWD","14,474",14474,"2026/08/31"],
+ ["現金","台銀活儲","TWD","9,884",9884,"2026/08/31"],
+ ["現金","TNG","MYR","719.53",5584.61,"2026/08/31"],
+ ["現金","公司預支現金池（實體現鈔）","MYR","531",4121.34,"2026/08/30"],
+ ["現金","永豐西門活儲(0428)","TWD","3,118",3118,"2026/08/31"],
+ ["投資","加密貨幣","","",7576523.78,"即時"],
+ ["投資","美股","","",3846570.56,"即時"],
+ ["投資","台股","","",1232614.50,"即時"],
+ ["自住置產","ParkCity Damansara／Zenia PH173 訂金","MYR","254,000",2004292.40,"2026-08"],
+ ["負債","彰化銀行擔保貸款","TWD","-558,591",-558591,"2026/08/31"],
+ ["負債","台灣銀行就學貸款(9987)","TWD","-294,290",-294290,"2026/08/31"]
+],
+"loanChain":[
+ ["2026/07/13","借款本金撥入","MYR 500,000","現金 ＋500k／負債 ＋500k","融資流入，不列收入"],
+ ["07/17–31","ATM 存入 CIMB","MYR 54,450","借款現金 → CIMB，資產不變","帳戶間轉移"],
+ ["08/04–30","ATM 存入 CIMB","MYR 290,110","借款現金 → CIMB，資產不變","帳戶間轉移"],
+ ["2026/08/04","自住購屋訂金","MYR 154,000","公司預支現金池 −154k","置產支出，不列日常"],
+ ["08/11–30","現金消費 3 筆","MYR 909","現金池 −909","日常支出"],
+ ["2026/07","薪資扣款還款（第 1 期）","MYR 21,000","負債 −21k（CNY 薪資補扣）","不另列現金流出"],
+ ["截至 08/30","現金池結餘（實體現鈔）","MYR 531","500,000 − 54,450 − 290,110 − 154,000 − 909",""]
+]
+}
+;</script>
+<script>
+(function(){
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+  const K = DATA.kpi;
+
+  document.getElementById('figNet').textContent = fmt(K.netWorth);
+  document.getElementById('figAssets').textContent = 'NT$'+fmt(K.totalAssets);
+  document.getElementById('figLiab').textContent = 'NT$'+fmt(K.liab);
+
+  /* ---- theme toggle ---- */
+  const root = document.documentElement, tb = document.getElementById('themeBtn');
+  tb.addEventListener('click', () => {
+    const cur = root.getAttribute('data-theme');
+    const sysDark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+    const next = cur ? (cur === 'dark' ? 'light' : 'dark') : (sysDark ? 'light' : 'dark');
+    root.setAttribute('data-theme', next);
+  });
+
+  /* ---- tiles ---- */
+  document.getElementById('tiles').innerHTML = `
+    <div class="tile"><div class="k"><span class="dot" style="background:var(--c1)"></span>總資產</div>
+      <div class="v">NT$${fmt(K.totalAssets)}</div><div class="m">現金＋投資＋自住置產</div></div>
+    <div class="tile"><div class="k"><span class="dot" style="background:var(--c3)"></span>現金資產</div>
+      <div class="v">NT$${fmt(K.cash)}</div><div class="m">17 個帳戶，跨 TWD/USD/MYR/CNY</div></div>
+    <div class="tile"><div class="k"><span class="dot" style="background:var(--c2)"></span>投資市值</div>
+      <div class="v">NT$${fmt(K.invest)}</div><div class="m">台股・美股・加密貨幣</div></div>
+    <div class="tile"><div class="k"><span class="dot" style="background:var(--loan)"></span>負債</div>
+      <div class="v" style="color:var(--loan)">NT$${fmt(K.liab)}</div><div class="m">台灣貸款 85万 ＋ 公司借款 372万</div></div>`;
+
+  /* ---- allocation ---- */
+  const colors=['var(--c1)','var(--c3)','var(--c2)','var(--loan)','var(--c4)','var(--c5)'];
+  document.getElementById('allocSplit').innerHTML = DATA.alloc.map((a,i) =>
+    `<i style="width:${a[2]*100}%;background:${colors[i]}"></i>`).join('');
+  document.getElementById('allocList').innerHTML = DATA.alloc.map((a,i) => `
+    <div class="alloc-row">
+      <span class="nm"><i style="background:${colors[i]}"></i>${a[0]}</span>
+      <span class="bt"><i style="width:${a[2]*100}%;background:${colors[i]}"></i></span>
+      <span class="vv">NT$${fmt(a[1])} · ${Math.round(a[2]*1000)/10}%</span>
+    </div>`).join('');
+
+  /* ---- balance sheet ---- */
+  document.getElementById('balanceTable').innerHTML = DATA.balance.map(([nm,amt,note]) => {
+    const isSub = /淨資產|負債總額|資產總額/.test(nm);
+    const isLoan = /公司借款/.test(nm);
+    const isNeg = /已列負債|公司借款負債/.test(nm);
+    return `<tr class="${isSub?'sub':''}">
+      <td class="lbl">${isLoan?`<span class="loan-txt">${nm}</span>`:nm}<span class="note-s">${note}</span></td>
+      <td class="amt ${isNeg?'neg':''}">${isNeg?'－':''}NT$${fmt(amt)}</td>
+    </tr>`;
+  }).join('');
+
+  /* ---- loan chain ---- */
+  document.getElementById('chainList').innerHTML = DATA.loanChain.map(([d,ev,amt,eff,basis]) => `
+    <div class="chain-row">
+      <span class="dt">${d}</span>
+      <span class="ev">${ev}<span>${eff}${basis?'　'+basis:''}</span></span>
+      <span class="amt">${amt}</span>
+    </div>`).join('');
+
+  /* ---- accounts table ---- */
+  const groups = ['現金','投資','自住置產','負債'];
+  let rows = `<thead><tr><th>帳戶</th><th>幣別</th><th class="num">原幣金額</th><th class="num">TWD 金額</th><th>更新日</th></tr></thead><tbody>`;
+  groups.forEach(g => {
+    const items = DATA.accounts.filter(a => a[0]===g);
+    const sub = items.reduce((s,a)=>s+a[4],0);
+    rows += `<tr class="grp"><td colspan="3">${g}</td><td class="num${sub<0?' neg':''}">${sub<0?'－':''}NT$${fmt(Math.abs(sub))}</td><td></td></tr>`;
+    items.forEach(([,nm,cur,orig,twd,dt]) => {
+      rows += `<tr><td>${nm}</td><td>${cur||'－'}</td><td class="num">${orig||'－'}</td>
+        <td class="num${twd<0?' neg':''}">${twd<0?'－':''}NT$${fmt(Math.abs(twd))}</td><td class="num" style="font-size:11.5px">${dt}</td></tr>`;
+    });
+  });
+  rows += '</tbody>';
+  document.getElementById('acctTable').innerHTML = rows;
+})();
+</script>
+
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>
