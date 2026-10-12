@@ -186,6 +186,11 @@
     .mobile-trend{display:block;}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+
+/* negative numbers in red */
+:root{--neg:#c0392b;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--neg:#e2635f;}}
+:root[data-theme="dark"]{--neg:#e2635f;}
 </style>
 <style>.pwa-back{position:fixed;top:14px;left:14px;z-index:20;border:1px solid var(--hair-strong,#d3cfc1);
   background:var(--surface,#fbfaf7);color:var(--ink-2,#57544c);border-radius:999px;padding:6px 13px;
@@ -453,7 +458,7 @@
       <td class="num">${r.market==='tw'?'NT$':'$'}${fmt2(r.sellPrice)}</td>
       <td class="num">${r.market==='tw'?'NT$':'$'}${fmt2(r.proceeds)}</td>
       <td class="num">${r.market==='tw'?'NT$':'$'}${fmt2(r.cost)}</td>
-      <td class="num">${r.matchPct>=90 ? (r.realized>=0?'+':'−')+ (r.market==='tw'?'NT$':'$')+fmt2(Math.abs(r.realized)) : '－'}</td>
+      <td class="num"${r.matchPct>=90 && r.realized<0 ? ' style="color:var(--neg)"' : ''}>${r.matchPct>=90 ? (r.realized>=0?'+':'−')+ (r.market==='tw'?'NT$':'$')+fmt2(Math.abs(r.realized)) : '－'}</td>
       <td><span class="pill ${r.matchPct>=90?'buy':'na'}">${r.matchPct}% 已配對</span></td>
     </tr>`).join('');
 

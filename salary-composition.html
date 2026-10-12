@@ -168,7 +168,7 @@
   tbody tr:hover td{background:var(--surface-2);}
   td.m{font-family:var(--sans); color:var(--ink); font-weight:500;}
   td.note{color:var(--muted); font-size:11px; max-width:260px; min-width:180px; font-family:var(--sans); white-space:normal;}
-  td.neg{color:var(--c-bonus);}
+  td.neg{color:var(--neg);}
 
   footer{margin-top:44px; padding-top:18px; border-top:1px solid var(--hair);
     font-size:11.5px; color:var(--muted); line-height:1.7;}
@@ -179,6 +179,11 @@
     .tbars{padding-left:38px;}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+
+/* negative numbers in red */
+:root{--neg:#c0392b;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--neg:#e2635f;}}
+:root[data-theme="dark"]{--neg:#e2635f;}
 </style>
 <style>.pwa-back{position:fixed;top:14px;left:14px;z-index:20;border:1px solid var(--hair-strong,#d3cfc1);
   background:var(--surface,#fbfaf7);color:var(--ink-2,#57544c);border-radius:999px;padding:6px 13px;

@@ -204,6 +204,11 @@
     .mobile-trend{display:block;}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+
+/* negative numbers in red */
+:root{--neg:#c0392b;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--neg:#e2635f;}}
+:root[data-theme="dark"]{--neg:#e2635f;}
 </style>
 <style>.pwa-back{position:fixed;top:14px;left:14px;z-index:20;border:1px solid var(--hair-strong,#d3cfc1);
   background:var(--surface,#fbfaf7);color:var(--ink-2,#57544c);border-radius:999px;padding:6px 13px;
@@ -434,7 +439,7 @@
         html += `<div class="mv-sub">${loan ? '這個月沒有薪資入帳資料，只有借款扣款排程' : '沒有資料'}</div>`;
       }
       if (loan){
-        html += `<div class="mv-row loan"><span class="nm"><i></i>公司借款月扣款（第 ${loan.period} 期）</span><span class="amt">－NT$${fmt(loan.amtTwd)}（RM${fmt(loan.amtMyr)}）</span></div>`;
+        html += `<div class="mv-row loan"><span class="nm"><i></i>公司借款月扣款（第 ${loan.period} 期）</span><span class="amt" style="color:var(--neg)">－NT$${fmt(loan.amtTwd)}（RM${fmt(loan.amtMyr)}）</span></div>`;
       }
       if (!hasIncome && !loan){
         html += `<div class="mv-empty">這個月沒有資料。</div>`;

@@ -105,7 +105,7 @@
   .bs-table tr:last-child td{border-bottom:none;}
   .bs-table td.lbl{color:var(--ink);}
   .bs-table td.amt{text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums; color:var(--ink);}
-  .bs-table td.amt.neg{color:var(--c2);}
+  .bs-table td.amt.neg{color:var(--neg);}
   .bs-table tr.sub td{font-weight:600; background:var(--surface-2);}
   .bs-table tr.sub td.lbl, .bs-table tr.sub td.amt{color:var(--ink);}
   .bs-table .note-s{display:block; font-size:11px; color:var(--muted); font-weight:400; margin-top:2px;}
@@ -121,7 +121,7 @@
   table.acct td{padding:9px 14px; border-bottom:1px solid var(--hair); color:var(--ink-2);}
   table.acct tr:last-child td{border-bottom:none;}
   table.acct tr.grp td{background:var(--surface-2); font-weight:600; color:var(--ink);}
-  table.acct td.neg{color:var(--c2);}
+  table.acct td.neg{color:var(--neg);}
 
   /* ---------- loan chain ---------- */
   .chain{display:flex; flex-direction:column;}
@@ -145,6 +145,11 @@
     .alloc-row .vv{text-align:left;}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+
+/* negative numbers in red */
+:root{--neg:#c0392b;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--neg:#e2635f;}}
+:root[data-theme="dark"]{--neg:#e2635f;}
 </style>
 <style>.pwa-back{position:fixed;top:14px;left:14px;z-index:20;border:1px solid var(--hair-strong,#d3cfc1);
   background:var(--surface,#fbfaf7);color:var(--ink-2,#57544c);border-radius:999px;padding:6px 13px;
